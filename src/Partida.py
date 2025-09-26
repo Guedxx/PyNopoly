@@ -108,10 +108,10 @@ class Partida:
         jogadores_ativos = []
         #estado_atual = self.jogadores[self.jogador_atual_idx].estado_atual
         for i in self.jogadores:
-            estado_atual = self.jogadores[self.jogador_atual_idx].estado_atual
+            estado_atual = i.estado_atual
             if not isinstance(estado_atual, JogadorFalidoState):
-                jogadores_ativos.append(self.jogador_atual_idx)
-            self.jogador_atual_idx = (self.jogador_atual_idx +1) % len(self.jogadores)
+                jogadores_ativos.append(i)
+        # Removido incremento de self.jogador_atual_idx
         if len(jogadores_ativos)==1:
             #não sei o que ocorre dps daqui mas vamos apenas encerrar! 
             self.em_andamento = False
