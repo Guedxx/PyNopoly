@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List
 import random
-from .Jogador import *
+from .Jogador import Jogador, JogadorFalidoState, JogadorPresoState
 from .Fabricas import TabuleiroAbstractFactory, TabuleiroPadraoFactory
 from .Banco import Banco
 from .Tabuleiro import Tabuleiro
