@@ -102,7 +102,7 @@ class Partida:
         estado_atual = self.jogadores[self.jogador_atual_idx].estado_atual
         while isinstance(estado_atual, (JogadorFalidoState, JogadorPresoState)):
             self.jogador_atual_idx = (self.jogador_atual_idx +1) % len(self.jogadores)
-
+            estado_atual = self.jogadores[self.jogador_atual_idx].estado_atual
     def verificar_fim_de_jogo(self):
         #basicamente, o jogo termina quando apenas um jogador não tiver falido
         jogadores_ativos = []
