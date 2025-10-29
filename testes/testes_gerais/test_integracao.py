@@ -34,18 +34,16 @@ class TestIntegracao(unittest.TestCase):
         # Simula 20 rodadas completas (80 turnos)
         for i in range(80):
             print(f"\n--- Rodada {i//4 + 1}, Turno {i%4 + 1} ---")
-            jogador_antes = partida.jogadores[partida.jogador_atual_idx]
-            posicao_antes = jogador_antes.posicao
-            dinheiro_antes = jogador_antes.dinheiro
+            jogador_da_vez = partida.jogadores[partida.jogador_atual_idx]
+            posicao_antes = jogador_da_vez.posicao
+            dinheiro_antes = jogador_da_vez.dinheiro
 
             partida.jogar_rodada()
 
-            jogador_depois = partida.jogadores[partida.jogador_atual_idx-1] # O jogador que acabou de jogar
-
-            print(f"Jogador: {jogador_depois.peca}")
-            print(f"Posição: {posicao_antes} -> {jogador_depois.posicao}")
-            print(f"Dinheiro: {dinheiro_antes} -> {jogador_depois.dinheiro}")
-            print(f"Propriedades: {len(jogador_depois.propriedades)}")
+            print(f"Jogador: {jogador_da_vez.peca}")
+            print(f"Posição: {posicao_antes} -> {jogador_da_vez.posicao}")
+            print(f"Dinheiro: {dinheiro_antes} -> {jogador_da_vez.dinheiro}")
+            print(f"Propriedades: {len(jogador_da_vez.propriedades)}")
 
             # Verifica se o estado do jogo mudou
             self.assertTrue(partida.em_andamento, "O jogo não deveria ter acabado ainda.")

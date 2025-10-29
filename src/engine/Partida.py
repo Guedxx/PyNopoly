@@ -41,7 +41,6 @@ class Partida:
 
         self.em_andamento = True
         print("\n--- O JOGO COMEÇOU! ---")
-        self.jogar_rodada()  # Inicia a primeira rodada
 
     def jogar_rodada(self):
         """Executa um turno completo para o jogador atual."""
