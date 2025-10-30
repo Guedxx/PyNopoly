@@ -65,6 +65,7 @@ class Jogador:
         self._posicao: int = 0
         self.lance_leilao: int = 0
         self.dados = Dados()
+        self.doubles_consecutivos: int = 0
 
         # Terrenos
         self.propriedades: List[Terreno] = []
