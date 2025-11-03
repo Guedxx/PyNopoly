@@ -41,33 +41,53 @@ class Partida:
 
         self.em_andamento = True
         print("\n--- O JOGO COMEÇOU! ---")
-        self.jogar_rodada()  # Inicia a primeira rodada
 
     def jogar_rodada(self):
         """Executa um turno completo para o jogador atual."""
-
         if not self.em_andamento:
             print("O jogo já terminou!")
             return
 
         jogador_da_vez = self.jogadores[self.jogador_atual_idx]
-
         valor_dados = jogador_da_vez.jogar_round()
 
-        if valor_dados is not None:
-            posicao_anterior = jogador_da_vez.posicao
-            jogador_da_vez.mover(sum(valor_dados))
+        if valor_dados is None:
+            self.proximo_jogador()
+            return
 
-            if jogador_da_vez.posicao < posicao_anterior:
-                print(f"{jogador_da_vez.peca} completou uma volta!")
-                self.banco.pagar_salario(jogador_da_vez)
+        is_double = valor_dados[0] == valor_dados[1]
 
-            casa_atual = self.tabuleiro.get_casa_na_posicao(jogador_da_vez.posicao)
-            if casa_atual:
-                casa_atual.executar_acao(jogador_da_vez, sum(valor_dados), self.jogadores, self.baralho_sorte, self.baralho_cofre)
+        if is_double:
+            jogador_da_vez.doubles_consecutivos += 1
+        else:
+            jogador_da_vez.doubles_consecutivos = 0
+
+        if jogador_da_vez.doubles_consecutivos == 3:
+            print(f"{jogador_da_vez.peca} tirou 3 duplos consecutivos e vai para a cadeia!")
+            jogador_da_vez.ir_para_cadeia()
+            jogador_da_vez.doubles_consecutivos = 0
+            self.proximo_jogador()
+            return
+
+        posicao_anterior = jogador_da_vez.posicao
+        jogador_da_vez.mover(sum(valor_dados))
+
+        if jogador_da_vez.posicao < posicao_anterior:
+            print(f"{jogador_da_vez.peca} completou uma volta!")
+            self.banco.pagar_salario(jogador_da_vez)
+
+        casa_atual = self.tabuleiro.get_casa_na_posicao(jogador_da_vez.posicao)
+        if casa_atual:
+            casa_atual.executar_acao(jogador_da_vez, sum(valor_dados), self.jogadores, self.baralho_sorte, self.baralho_cofre)
 
         self.verificar_fim_de_jogo()
-        self.proximo_jogador()
+        if not self.em_andamento:
+            return
+
+        if is_double:
+            print(f"{jogador_da_vez.peca} tirou dados iguais e joga de novo!")
+        else:
+            self.proximo_jogador()
 
     def proximo_jogador(self):
         """Avança o turno para o próximo jogador na lista."""
