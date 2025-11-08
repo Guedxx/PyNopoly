@@ -24,7 +24,7 @@ class Menu:
             exit()
 
         # Load menu background
-        self.menu_surface = pygame.image.load(os.path.join("assets", "bg-placeholder.jpeg"))
+        self.menu_surface = pygame.image.load(os.path.join("assets", "menu.png"))
         self.menu_surface = pygame.transform.scale(self.menu_surface, (1280, 720))
 
         # Create a working surface for drawing buttons
@@ -61,9 +61,9 @@ class Menu:
         self.title = pygame.image.load(os.path.join("assets", "titulo.png"))
 
         # Create buttons at specified position
-        self.start_button = Button(524, 375, start_button_image, select_character_modal.show)
-        self.credits_button = Button(524, 465, credits_button_image, credits_modal.show)
-        self.exit_button = Button(524, 555, exit_button_image, self.exit_game)
+        self.start_button = Button(200, 380, start_button_image, select_character_modal.show)
+        self.credits_button = Button(200, 470, credits_button_image, credits_modal.show)
+        self.exit_button = Button(200, 560, exit_button_image, self.exit_game)
 
     def start_game(self):
         pass  
@@ -97,7 +97,7 @@ class Menu:
             # Prepare the surface with menu background
             menu_surface = self.menu_surface.copy()
 
-            title_rect = self.title.get_rect(center=(1280 // 2, 200))
+            title_rect = self.title.get_rect(center=(1280 // 2, 100))
             menu_surface.blit(self.title, title_rect)
 
             # Draw buttons on the surface
