@@ -66,6 +66,16 @@ class Game:
         self.num_casas = len(self.casas_x_y)
         self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
 
+        # Pre-load and scale modal image for dimensions
+        unscaled_buy_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-comprar-propriedade.png')).convert_alpha()
+        original_width = unscaled_buy_modal_image.get_width()
+        original_height = unscaled_buy_modal_image.get_height()
+        scaled_width = int(original_width * 1.3)
+        scaled_height = int(original_height * 1.3)
+        self.buy_property_modal_image = pygame.transform.scale(unscaled_buy_modal_image, (scaled_width, scaled_height))
+        self.buy_property_modal_width = self.buy_property_modal_image.get_width()
+        self.buy_property_modal_height = self.buy_property_modal_image.get_height()
+
     def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
         if pos_interpolada:
             base = pos_interpolada
@@ -165,7 +175,9 @@ class Game:
                 self.game_state = "AWAITING_ROLL"
 
         elif acao == "proposta_compra":
-            modal = BuyPropertyModal(420, 200, self.screen, self.clock, result["imovel"])
+            modal_x = (self.width - self.buy_property_modal_width) // 2
+            modal_y = (self.height - self.buy_property_modal_height) // 2
+            modal = BuyPropertyModal(modal_x, modal_y, self.buy_property_modal_image, self.screen, self.clock, result["imovel"])
             decision = modal.show()
             self.partida.resolver_compra(decision)
             result = self.partida.finalizar_turno(self.last_roll_was_double)
