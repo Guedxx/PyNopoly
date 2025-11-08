@@ -3,6 +3,7 @@ from src.ui.character_card import CharacterCard
 from src.ui.modal_interface import Modal
 from pygame._sdl2.video import Texture
 import pygame, sys
+from .game import Game
 
 
 class SelectCharacterModal(Modal):
@@ -43,6 +44,8 @@ class SelectCharacterModal(Modal):
     def select_character(self, name):
         print(f"Personagem selecionado: {name}")
         self.selected_character = name
+        game = Game(self.selected_character, self.renderer)
+        game.run()
 
     def show(self):
         showing = True
@@ -61,8 +64,13 @@ class SelectCharacterModal(Modal):
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     for card in self.character_cards.values():
                         if card.handle_event(event):
+                            # Character is selected, select_character will be called
+                            # which starts the game. We set showing to false
+                            # to exit the modal loop, though the game has taken over.
                             showing = False
                             break
+                    if not showing:
+                        break
             
             for card in self.character_cards.values():
                 card.update_hover(mouse_pos)
