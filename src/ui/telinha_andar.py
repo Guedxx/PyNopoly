@@ -2,6 +2,9 @@ import os
 import sys
 import pygame
 from pygame import *
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from src.engine.Jogador import Jogador
 
 # Base do projeto (raiz do repositório)
