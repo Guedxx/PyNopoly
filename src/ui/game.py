@@ -73,7 +73,7 @@ class Game:
         original_height = unscaled_buy_modal_image.get_height()
         scaled_width = int(original_width * 1.3)
         scaled_height = int(original_height * 1.3)
-        self.buy_property_modal_image = pygame.transform.scale(unscaled_buy_modal_image, (scaled_width, scaled_height))
+        self.buy_property_modal_image = pygame.transform.smoothscale(unscaled_buy_modal_image, (scaled_width, scaled_height))
         self.buy_property_modal_width = self.buy_property_modal_image.get_width()
         self.buy_property_modal_height = self.buy_property_modal_image.get_height()
 
@@ -82,7 +82,7 @@ class Game:
         original_tax_height = unscaled_tax_modal_image.get_height()
         scaled_tax_width = int(original_tax_width * 1.3)
         scaled_tax_height = int(original_tax_height * 1.3)
-        self.tax_modal_image = pygame.transform.scale(unscaled_tax_modal_image, (scaled_tax_width, scaled_tax_height))
+        self.tax_modal_image = pygame.transform.smoothscale(unscaled_tax_modal_image, (scaled_tax_width, scaled_tax_height))
         self.tax_modal_width = self.tax_modal_image.get_width()
         self.tax_modal_height = self.tax_modal_image.get_height()
 

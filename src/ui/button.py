@@ -24,7 +24,12 @@ class Button:
         """Draw button to a pygame surface"""
         surface.blit(self.image, self.rect)
         if self.is_hovered:
-            # Simple hover effect: darken the button slightly
             darken_surface = pygame.Surface(self.rect.size, flags=pygame.SRCALPHA)
             darken_surface.fill((0, 0, 0, 50))  # Black with 50 alpha
-            surface.blit(darken_surface, self.rect.topleft)
+
+            # Create a temporary surface to apply the darkening within the button's shape
+            temp_surface = pygame.Surface(self.rect.size, flags=pygame.SRCALPHA)
+            temp_surface.blit(self.image, (0, 0)) # Blit the button image onto a transparent surface
+            temp_surface.blit(darken_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT) # Apply darkening
+
+            surface.blit(temp_surface, self.rect.topleft)
