@@ -11,6 +11,7 @@ from src.engine.Partida import Partida
 from src.engine.Fabricas import TabuleiroPadraoFactory
 from src.ui.buy_property_modal import BuyPropertyModal
 from src.ui.tax_modal import TaxModal
+from src.ui.button import Button
 
 class Game:
     def __init__(self, selected_characters, screen):
@@ -67,7 +68,6 @@ class Game:
         self.num_casas = len(self.casas_x_y)
         self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
 
-        # Pre-load and scale modal images for dimensions
         unscaled_buy_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-comprar-propriedade.png')).convert_alpha()
         original_width = unscaled_buy_modal_image.get_width()
         original_height = unscaled_buy_modal_image.get_height()
@@ -86,6 +86,11 @@ class Game:
         self.tax_modal_width = self.tax_modal_image.get_width()
         self.tax_modal_height = self.tax_modal_image.get_height()
 
+        self.dice_display_image = pygame.image.load(os.path.join(assets_dir, 'mostrador-dados.png')).convert_alpha()
+
+        roll_dice_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-rodar-dados.png')).convert_alpha()
+        self.roll_dice_button = Button(1090, 530, roll_dice_button_img, self.trigger_roll_dice)
+
 
     def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
         if pos_interpolada:
@@ -100,19 +105,26 @@ class Game:
         except ValueError:
             return base
 
+    def trigger_roll_dice(self):
+        if self.game_state == "AWAITING_ROLL":
+            self.game_state = "BUSY"
+            result = self.partida.iniciar_turno()
+            self.handle_engine_result(result)
+
     def run(self):
         while self.running:
             self.clock.tick(60)
+            mouse_pos = pygame.mouse.get_pos()
 
             # --- Event Handling ---
             for event in pygame.event.get():
                 if event.type == QUIT:
                     self.running = False
                 elif event.type == KEYDOWN:
-                    if event.key == K_SPACE and self.game_state == "AWAITING_ROLL":
-                        self.game_state = "BUSY"
-                        result = self.partida.iniciar_turno()
-                        self.handle_engine_result(result)
+                    if event.key == K_SPACE:
+                        self.trigger_roll_dice()
+                
+                self.roll_dice_button.handle_event(event)
 
             # --- Game State Machine ---
             if self.game_state == "ANIMATING":
@@ -158,10 +170,16 @@ class Game:
                 draw_pos = self.get_draw_pos(jogador, current_pos)
                 self.screen.blit(self.icon_jogadores[jogador.peca], draw_pos)
             
+            # Dice Display
+            self.screen.blit(self.dice_display_image, (1141, 530))
             texto_dado1 = self.font.render(str(self.valor_dado1), True, (255, 255, 255))
             texto_dado2 = self.font.render(str(self.valor_dado2), True, (255, 255, 255))
-            self.screen.blit(texto_dado1, (1190, 540))
-            self.screen.blit(texto_dado2, (1230, 540))
+            self.screen.blit(texto_dado1, (1200, 540))
+            self.screen.blit(texto_dado2, (1240, 540))
+
+            # Roll Dice Button
+            self.roll_dice_button.update_hover(mouse_pos)
+            self.roll_dice_button.draw_to_surface(self.screen)
 
             pygame.display.flip()
 
