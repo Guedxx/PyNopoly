@@ -39,8 +39,9 @@ class Imovel(Terreno):
 
     def executar_acao(self, jogador: Jogador, val_dados: int = 0, jogadores: List[Jogador] = None, baralho_sorte: Baralho = None, baralho_cofre: Baralho = None):
         if self.dono is None:
-            if jogador.dinheiro >= self.preco:
-                jogador.comprar_imovel(self)
+            # Lógica de compra será transferida para a Partida/UI
+            # Por enquanto, não faz nada
+            pass
         elif self.dono is not jogador:
             aluguel = self.calcular_aluguel(val_dados)
             jogador.pagar_aluguel(self.dono, aluguel)

@@ -9,19 +9,16 @@ from src.engine.Jogador import Jogador
 from src.ui.animation import AnimacaoMovimento
 from src.engine.Partida import Partida
 from src.engine.Fabricas import TabuleiroPadraoFactory
+from src.ui.buy_property_modal import BuyPropertyModal
 
 class Game:
     def __init__(self, selected_characters, screen):
-        # Core components
         self.screen = screen
         self.clock = pygame.time.Clock()
-
-        # Constants
         self.height = 720
         self.width = 1280
         self.font = pygame.font.Font(None, 36)
         
-        # Assets
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         self.background = pygame.image.load(os.path.join(assets_dir, 'gamebg.png')).convert()
         self.tabuleiro_img = pygame.image.load(os.path.join(assets_dir, 'tabuleirobase.png')).convert_alpha()
@@ -31,23 +28,21 @@ class Game:
             "rosa": pygame.image.load(os.path.join(assets_dir, 'icone-gato-rosa.png')).convert_alpha(),
             "roxo": pygame.image.load(os.path.join(assets_dir, 'icone-gato-roxo.png')).convert_alpha(),
             "verde": pygame.image.load(os.path.join(assets_dir, 'icone-gato-verde.png')).convert_alpha(),
-            "amarelo": pygame.image.load(os.path.join(assets_dir, 'icone-gato.png')).convert_alpha(), # Placeholder
-            "ciano": pygame.image.load(os.path.join(assets_dir, 'icove-gato-azul.png')).convert_alpha(), # Placeholder
+            "amarelo": pygame.image.load(os.path.join(assets_dir, 'icone-gato.png')).convert_alpha(),
+            "ciano": pygame.image.load(os.path.join(assets_dir, 'icove-gato-azul.png')).convert_alpha(),
         }
 
-        # Game state
         self.running = True
         self.valor_dado1 = 0
         self.valor_dado2 = 0
+        self.game_state = "AWAITING_ROLL"
+        self.last_roll_was_double = False
         
-        # Engine Setup
-        player_names = selected_characters
         factory = TabuleiroPadraoFactory()
-        self.partida = Partida(player_names, factory)
+        self.partida = Partida(selected_characters, factory)
         self.partida.iniciar_jogo()
         self.jogadores = self.partida.jogadores
 
-        # Load player cards
         self.player_cards = {}
         for jogador in self.jogadores:
             try:
@@ -56,7 +51,6 @@ class Game:
             except pygame.error:
                 print(f"Aviso: Imagem do card do jogador '{jogador.peca}' não encontrada.")
 
-        # Board positions
         self.casas_x_y = {
             0: (350, 310), 1: (390, 350), 2: (420, 380), 3: (445, 405), 
             4: (465, 430), 5: (490, 450), 6: (520, 480), 7: (540, 500), 
@@ -70,8 +64,6 @@ class Game:
             36: (475,194), 37:(446,218), 38:(418,248), 39:(398,272)
         }
         self.num_casas = len(self.casas_x_y)
-
-        # Animation
         self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
 
     def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
@@ -91,74 +83,41 @@ class Game:
         while self.running:
             self.clock.tick(60)
 
-            # Event handling
+            # --- Event Handling ---
             for event in pygame.event.get():
                 if event.type == QUIT:
                     self.running = False
                 elif event.type == KEYDOWN:
-                    if event.key == K_SPACE:
-                        if not self.animacao.ativa and not self.animacao.tem_passos_pendentes():
-                            resultado_turno = self.partida.jogar_rodada()
-                            
-                            if resultado_turno:
-                                jogador_da_vez = resultado_turno["jogador"]
-                                dados = resultado_turno["dados"]
-                                
-                                #print(f"\n=== Turno do Jogador: {jogador_da_vez.nome} ===")
-                                
-                                if resultado_turno["acao"] == "moveu":
-                                    self.valor_dado1, self.valor_dado2 = dados[0], dados[1]
-                                    path = resultado_turno["path"]
-                                    pos_anterior = resultado_turno["posicao_anterior"]
-                                    
-                                    try:
-                                        jogador_idx = self.jogadores.index(jogador_da_vez)
-                                        self.animacao.iniciar(jogador_idx, path, pos_anterior)
-                                        # Inicia o primeiro passo da animação imediatamente para evitar o "teleporte"
-                                        if self.animacao.tem_passos_pendentes():
-                                            self.animacao.proximo_passo()
-                                    except ValueError:
-                                        pass # Player not found, should not happen
-                                
-                                elif resultado_turno["acao"] == "foi_preso_por_doubles":
-                                    try:
-                                        jogador_idx = self.jogadores.index(jogador_da_vez)
-                                        # Posição anterior é a mesma que a atual antes de ir para a cadeia
-                                        pos_anterior = jogador_da_vez.posicao 
-                                        self.animacao.iniciar(jogador_idx, resultado_turno["path"], pos_anterior)
-                                        if self.animacao.tem_passos_pendentes():
-                                            self.animacao.proximo_passo()
-                                    except ValueError:
-                                        pass
+                    if event.key == K_SPACE and self.game_state == "AWAITING_ROLL":
+                        self.game_state = "BUSY"
+                        result = self.partida.iniciar_turno()
+                        self.handle_engine_result(result)
+
+            # --- Game State Machine ---
+            if self.game_state == "ANIMATING":
+                # If a step animation finished, but there are more steps, start the next one
+                if not self.animacao.ativa and self.animacao.tem_passos_pendentes():
+                    self.animacao.proximo_passo()
+                
+                # If all animation steps are complete, execute the action for the square
+                elif not self.animacao.ativa and not self.animacao.tem_passos_pendentes():
+                    self.game_state = "BUSY"
+                    result = self.partida.executar_acao_pos_movimento()
+                    self.handle_engine_result(result)
             
-            # Animation management
-            if not self.animacao.ativa and self.animacao.tem_passos_pendentes():
-                self.animacao.proximo_passo()
-            
-            if not self.animacao.ativa and not self.animacao.tem_passos_pendentes() and self.animacao.jogador_idx is not None:
-                self.animacao.finalizar()
-            
+            # --- Rendering ---
             pos_interpolada = None
             if self.animacao.ativa:
                 jogador_animado = self.jogadores[self.animacao.jogador_idx]
                 pos_interpolada = self.animacao.atualizar(jogador_animado)
-            
-            # Rendering
+
             self.screen.blit(self.background, (0, 0))
             
-            # Draw Player Cards
-            card_positions = [
-                (0, 0), # Top-Left
-                (self.width, 0), # Top-Right
-                (0, self.height), # Bottom-Left
-                (self.width, self.height) # Bottom-Right
-            ]
-
+            card_positions = [ (0, 0), (self.width, 0), (0, self.height), (self.width, self.height) ]
             for i, jogador in enumerate(self.jogadores):
                 if i < 4:
                     card_surface = self.player_cards.get(jogador.peca)
                     if card_surface:
-                        # Position and draw the card
                         pos = card_positions[i]
                         rect = card_surface.get_rect()
                         if pos[0] > 0: rect.right = pos[0]
@@ -167,10 +126,8 @@ class Game:
                         else: rect.top = pos[1]
                         self.screen.blit(card_surface, rect)
 
-                        # Render and draw the player's money
                         money_text = f"{jogador.dinheiro}"
                         money_surface = self.font.render(money_text, True, (255, 255, 255))
-                        # Position text relative to the card's top-left corner
                         text_pos = (rect.left + 150, rect.top + 30)
                         self.screen.blit(money_surface, text_pos)
 
@@ -179,14 +136,58 @@ class Game:
             for i, jogador in enumerate(self.jogadores):
                 is_animating = self.animacao.ativa and i == self.animacao.jogador_idx
                 current_pos = pos_interpolada if is_animating else None
-                
                 draw_pos = self.get_draw_pos(jogador, current_pos)
                 self.screen.blit(self.icon_jogadores[jogador.peca], draw_pos)
             
             texto_dado1 = self.font.render(str(self.valor_dado1), True, (255, 255, 255))
             texto_dado2 = self.font.render(str(self.valor_dado2), True, (255, 255, 255))
-            
             self.screen.blit(texto_dado1, (1190, 540))
             self.screen.blit(texto_dado2, (1230, 540))
 
             pygame.display.flip()
+
+    def handle_engine_result(self, result):
+        if not result:
+            return
+
+        acao = result.get("acao")
+        
+        if acao == "moveu":
+            self.valor_dado1, self.valor_dado2 = result["dados"][0], result["dados"][1]
+            self.last_roll_was_double = result["is_double"]
+            try:
+                jogador_idx = self.jogadores.index(result["jogador"])
+                self.animacao.iniciar(jogador_idx, result["path"], result["posicao_anterior"])
+                if self.animacao.tem_passos_pendentes():
+                    self.animacao.proximo_passo()
+                self.game_state = "ANIMATING"
+            except ValueError:
+                self.game_state = "AWAITING_ROLL"
+
+        elif acao == "proposta_compra":
+            modal = BuyPropertyModal(420, 200, self.screen, self.clock, result["imovel"])
+            decision = modal.show()
+            self.partida.resolver_compra(decision)
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+
+        elif acao == "turno_finalizado":
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+        
+        elif acao == "movido_por_carta":
+            try:
+                jogador_idx = self.jogadores.index(self.partida.jogadores[self.partida.jogador_atual_idx])
+                pos_anterior = self.partida.jogadores[jogador_idx].posicao
+                self.animacao.iniciar(jogador_idx, result["path"], pos_anterior)
+                if self.animacao.tem_passos_pendentes():
+                    self.animacao.proximo_passo()
+                self.game_state = "ANIMATING"
+            except ValueError:
+                self.game_state = "AWAITING_ROLL"
+
+        elif acao in ["preso", "foi_preso_por_doubles", "turno_pronto_para_iniciar"]:
+            self.game_state = "AWAITING_ROLL"
+        
+        elif acao == "fim_de_jogo":
+            self.running = False
