@@ -6,6 +6,7 @@ from pygame import *
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from src.engine.Jogador import Jogador
+from src.ui.animation import AnimacaoMovimento
 
 # Base do projeto (raiz do repositório)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -31,6 +32,8 @@ pygame.display.set_caption("PyNopoly")
 
 # Baixando o fundo do tabuleiro e os ícones dos jogadores
 background = pygame.image.load(os.path.join(ARTS_DIR, 'tabuleiro.png')).convert_alpha()
+tabuleiro = pygame.image.load(os.path.join(ARTS_DIR, 'tabuleirobase.png')).convert_alpha()
+
 icon_jogadores = {
     0: pygame.image.load(os.path.join(ARTS_DIR, 'icone-gato-azul.png')).convert_alpha(),
     1: pygame.image.load(os.path.join(ARTS_DIR, 'icone-gato-rosa.png')).convert_alpha(),
@@ -45,6 +48,7 @@ running = True
 
 # Criando jogadores
 pecas = {0: "azul", 1: "verde", 2: "rosa", 3: "roxo"}
+
 # Jogador espera (peca, nome). Usamos um nome simples baseado no índice.
 jogadores = [Jogador(pecas[i], f"Jogador {i+1}") for i in range(len(pecas))]
 
@@ -70,77 +74,7 @@ NUM_CASAS = len(casas_x_y)
 current_player = 0
 
 # Controle de animação
-class AnimacaoMovimento:
-    def __init__(self):
-        self.ativa = False
-        self.jogador_idx = None
-        self.passos_restantes = []  # Lista de índices de casas a animar
-        self.pos_inicio = (0, 0)
-        self.pos_fim = (0, 0)
-        self.tempo_inicio = 0
-        self.casa_destino_atual = 0
-        self.duracao_passo = 180  # ms por casa
-    
-    def iniciar(self, jogador_idx, jogador, valor_dados):
-        """Inicia a animação de movimento para um jogador"""
-        self.jogador_idx = jogador_idx
-        self.passos_restantes = []
-        
-        # Calcula todas as casas intermediárias do movimento
-        posicao_inicial = jogador.posicao
-        for i in range(1, valor_dados + 1):
-            proxima_casa = (posicao_inicial + i) % NUM_CASAS
-            self.passos_restantes.append(proxima_casa)
-        
-        print(f"Animação iniciada: Jogador {jogador_idx} vai da casa {posicao_inicial} para {self.passos_restantes[-1]}")
-    
-    def proximo_passo(self, jogador):
-        """Inicia a animação do próximo passo"""
-        if not self.passos_restantes:
-            return False
-        
-        self.casa_destino_atual = self.passos_restantes.pop(0)
-        casa_origem = jogador.posicao
-        
-        self.pos_inicio = casas_x_y.get(casa_origem, casas_x_y[0])
-        self.pos_fim = casas_x_y.get(self.casa_destino_atual, casas_x_y[0])
-        self.tempo_inicio = pygame.time.get_ticks()
-        self.ativa = True
-        
-        return True
-    
-    def atualizar(self, jogador):
-        """Atualiza a animação atual e retorna a posição interpolada"""
-        if not self.ativa:
-            return None
-        
-        tempo_decorrido = pygame.time.get_ticks() - self.tempo_inicio
-        t = min(1.0, tempo_decorrido / self.duracao_passo)
-        
-        # Interpolação linear
-        x = self.pos_inicio[0] + (self.pos_fim[0] - self.pos_inicio[0]) * t
-        y = self.pos_inicio[1] + (self.pos_fim[1] - self.pos_inicio[1]) * t
-        
-        # Se completou o passo
-        if t >= 1.0:
-            jogador.posicao = self.casa_destino_atual
-            self.ativa = False
-            print(f"Jogador {self.jogador_idx} chegou na casa {self.casa_destino_atual}")
-            return None
-        
-        return (int(x), int(y))
-    
-    def tem_passos_pendentes(self):
-        """Verifica se ainda há passos para animar"""
-        return len(self.passos_restantes) > 0
-    
-    def finalizar(self):
-        """Finaliza a animação"""
-        self.ativa = False
-        self.jogador_idx = None
-        self.passos_restantes = []
-
-animacao = AnimacaoMovimento()
+animacao = AnimacaoMovimento(casas_x_y, NUM_CASAS)
 
 def get_draw_pos(jogador_idx: int, pos_interpolada=None):
     """
@@ -210,8 +144,10 @@ while running:
         pos_interpolada = animacao.atualizar(jogadores[animacao.jogador_idx])
     
     # Renderização
-    screen.fill((0, 0, 0))
+    #screen.fill((0, 0, 0))
     screen.blit(background, (0, 0))
+    screen.blit(tabuleiro, (328, 0))
+    
     
     # Desenha todos os jogadores
     for i, jogador in enumerate(jogadores):
