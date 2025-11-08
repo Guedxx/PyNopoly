@@ -1,69 +1,58 @@
 import pygame
 import sys
 import os
-from pygame._sdl2.video import Window, Renderer, Texture
 
 from .button import Button
 from .credits_modal import CreditsModal
 from .select_character_modal import SelectCharacterModal
+from .game import Game
 
 
 class Menu:
     def __init__(self):
         pygame.init()
 
-        try:
-            self.window = Window("PyNopoly", size=(1280, 720))
-            self.renderer = Renderer(self.window)
-        except Exception as e:
-            print(f"Error creating window or renderer: {e}")
-            pygame.quit()
-            exit()
+        # Screen setup
+        self.screen = pygame.display.set_mode((1280, 720))
+        pygame.display.set_caption("PyNopoly")
 
-        # Load menu background
-        self.menu_surface = pygame.image.load(os.path.join("assets", "menu.png"))
+        # Assets
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        self.menu_surface = pygame.image.load(os.path.join(assets_dir, "menu.png")).convert()
         self.menu_surface = pygame.transform.scale(self.menu_surface, (1280, 720))
+        
+        start_button_image = pygame.image.load(os.path.join(assets_dir, "botao-jogar.png")).convert_alpha()
+        credits_button_image = pygame.image.load(os.path.join(assets_dir, "botao-creditos.png")).convert_alpha()
+        exit_button_image = pygame.image.load(os.path.join(assets_dir, "botao-sair.png")).convert_alpha()
+        
+        credits_image = pygame.image.load(os.path.join(assets_dir, "modal-creditos.png")).convert_alpha()
+        select_character_image = pygame.image.load(os.path.join(assets_dir, "modal-selecao-personagem.png")).convert_alpha()
+        
+        self.title = pygame.image.load(os.path.join(assets_dir, "titulo.png")).convert_alpha()
 
-        # Create a working surface for drawing buttons
-        self.working_surface = self.menu_surface.copy()
-
-        # Converting surface into texture
-        self.menu_texture = Texture.from_surface(self.renderer, self.menu_surface)
+        # Clock
         self.clock = pygame.time.Clock()
 
-        # Load button images
-        start_button_image = pygame.image.load(os.path.join("assets", "botao-jogar.png"))
-        credits_button_image = pygame.image.load(os.path.join("assets", "botao-creditos.png"))
-        exit_button_image = pygame.image.load(os.path.join("assets", "botao-sair.png"))
-
-        # Load modal images
-        credits_image = pygame.image.load(os.path.join("assets", "modal-creditos.png"))
-        select_character_image = pygame.image.load(os.path.join(
-            "assets", "modal-selecao-personagem.png"))
-        
-        # Create modals
-        credits_modal = CreditsModal(240, 86, 
-                                     self.menu_surface.copy(), 
+        # Modals
+        self.credits_modal = CreditsModal(240, 86, 
                                      credits_image, 
-                                     self.renderer,
+                                     self.screen,
                                      self.clock)
-        # Mudar isso pro início do jogo no futuro, por enquanto está aqui só pra testar
-        select_character_modal = SelectCharacterModal(240, 120,
-                                                      self.menu_surface.copy(),
+        self.select_character_modal = SelectCharacterModal(240, 120,
                                                       select_character_image,
-                                                      self.renderer,
+                                                      self.screen,
                                                       self.clock)
 
-        # Load title
-        self.title = pygame.image.load(os.path.join("assets", "titulo.png"))
-
-        # Create buttons at specified position
-        self.start_button = Button(200, 380, start_button_image, select_character_modal.show)
-        self.credits_button = Button(200, 470, credits_button_image, credits_modal.show)
+        # Buttons
+        self.start_button = Button(200, 380, start_button_image, self.start_game_flow)
+        self.credits_button = Button(200, 470, credits_button_image, self.credits_modal.show)
         self.exit_button = Button(200, 560, exit_button_image, self.exit_game)
 
-    def start_game(self):
-        pass  
+    def start_game_flow(self):
+        selected_char = self.select_character_modal.show()
+        if selected_char:
+            game = Game([selected_char], self.screen)
+            game.run()
     
     def exit_game(self):
         pygame.quit()
@@ -75,37 +64,27 @@ class Menu:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+                    self.exit_game()
 
                 # Handle button events
                 self.start_button.handle_event(event)
                 self.credits_button.handle_event(event)
                 self.exit_button.handle_event(event)
 
-                if event.type == pygame.KEYDOWN:
-                    pass
-
             # Update button hover states
             self.start_button.update_hover(mouse_pos)
             self.credits_button.update_hover(mouse_pos)
             self.exit_button.update_hover(mouse_pos)
 
-            # Prepare the surface with menu background
-            menu_surface = self.menu_surface.copy()
+            # Drawing
+            self.screen.blit(self.menu_surface, (0, 0))
 
             title_rect = self.title.get_rect(center=(1280 // 2, 100))
-            menu_surface.blit(self.title, title_rect)
+            self.screen.blit(self.title, title_rect)
 
-            # Draw buttons on the surface
-            self.start_button.draw_to_surface(menu_surface)
-            self.credits_button.draw_to_surface(menu_surface)
-            self.exit_button.draw_to_surface(menu_surface)
+            self.start_button.draw_to_surface(self.screen)
+            self.credits_button.draw_to_surface(self.screen)
+            self.exit_button.draw_to_surface(self.screen)
 
-            # Convert surface to texture and render
-            self.menu_texture = Texture.from_surface(self.renderer, menu_surface)
-
-            self.renderer.clear()
-            self.renderer.blit(self.menu_texture)
-            self.renderer.present()
+            pygame.display.flip()
             self.clock.tick(60)

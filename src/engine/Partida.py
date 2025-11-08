@@ -17,13 +17,16 @@ class Partida:
     o tabuleiro e o banco.
     """
 
-    def __init__(self, pecas_jogadores: List[str], factory: TabuleiroAbstractFactory):
+    def __init__(self, nomes_jogadores: List[str], factory: TabuleiroAbstractFactory):
         print("Uma nova partida está sendo criada...")
 
         # GRASP CREATOR: A Partida cria os objetos que ela agrega e usa intensamente.
         self.banco = Banco()
         self.tabuleiro = factory.criar_tabuleiro()
-        self.jogadores = [Jogador(peca, f"Jogador {i+1}") for i, peca in enumerate(pecas_jogadores)]
+        
+        pecas = ["azul", "verde", "rosa", "roxo", "amarelo", "ciano"] # Lista de peças disponíveis
+        self.jogadores = [Jogador(pecas[i], nome) for i, nome in enumerate(nomes_jogadores)]
+
         self.baralho_sorte = gerar_baralho(10)
         self.baralho_cofre = gerar_baralho(10)
 
@@ -43,17 +46,24 @@ class Partida:
         print("\n--- O JOGO COMEÇOU! ---")
 
     def jogar_rodada(self):
-        """Executa um turno completo para o jogador atual."""
+        """
+        Executa um turno completo para o jogador atual.
+        Retorna um dicionário com o resultado do turno para a UI.
+        """
         if not self.em_andamento:
             print("O jogo já terminou!")
-            return
+            return None
 
         jogador_da_vez = self.jogadores[self.jogador_atual_idx]
         valor_dados = jogador_da_vez.jogar_round()
 
-        if valor_dados is None:
+        if valor_dados is None: # O jogador está preso e não pagou/tirou dados iguais
             self.proximo_jogador()
-            return
+            return {
+                "jogador": jogador_da_vez,
+                "dados": None,
+                "acao": "preso"
+            }
 
         is_double = valor_dados[0] == valor_dados[1]
 
@@ -63,31 +73,48 @@ class Partida:
             jogador_da_vez.doubles_consecutivos = 0
 
         if jogador_da_vez.doubles_consecutivos == 3:
-            print(f"{jogador_da_vez.peca} tirou 3 duplos consecutivos e vai para a cadeia!")
             jogador_da_vez.ir_para_cadeia()
             jogador_da_vez.doubles_consecutivos = 0
             self.proximo_jogador()
-            return
+            return {
+                "jogador": jogador_da_vez,
+                "dados": valor_dados,
+                "acao": "foi_preso_por_doubles"
+            }
 
         posicao_anterior = jogador_da_vez.posicao
         jogador_da_vez.mover(sum(valor_dados))
+        passou_pelo_inicio = jogador_da_vez.posicao < posicao_anterior
 
-        if jogador_da_vez.posicao < posicao_anterior:
-            print(f"{jogador_da_vez.peca} completou uma volta!")
+        if passou_pelo_inicio:
             self.banco.pagar_salario(jogador_da_vez)
 
         casa_atual = self.tabuleiro.get_casa_na_posicao(jogador_da_vez.posicao)
         if casa_atual:
+            # A ação da casa é executada aqui. A UI pode precisar de mais detalhes
+            # sobre o que aconteceu, o que pode exigir mais refatoração no futuro.
             casa_atual.executar_acao(jogador_da_vez, sum(valor_dados), self.jogadores, self.baralho_sorte, self.baralho_cofre)
 
         self.verificar_fim_de_jogo()
-        if not self.em_andamento:
-            return
+        
+        # Prepara o resultado para a UI
+        resultado_turno = {
+            "jogador": jogador_da_vez,
+            "dados": valor_dados,
+            "posicao_anterior": posicao_anterior,
+            "posicao_nova": jogador_da_vez.posicao,
+            "passou_pelo_inicio": passou_pelo_inicio,
+            "acao": "moveu"
+        }
 
-        if is_double:
-            print(f"{jogador_da_vez.peca} tirou dados iguais e joga de novo!")
-        else:
+        if not self.em_andamento:
+            resultado_turno["fim_de_jogo"] = True
+            return resultado_turno
+
+        if not is_double:
             self.proximo_jogador()
+        
+        return resultado_turno
 
     def proximo_jogador(self):
         """Avança o turno para o próximo jogador na lista."""

@@ -1,14 +1,11 @@
 import os
 from src.ui.character_card import CharacterCard
 from src.ui.modal_interface import Modal
-from pygame._sdl2.video import Texture
 import pygame, sys
-from .game import Game
-
 
 class SelectCharacterModal(Modal):
-    def __init__(self, x, y, modal_surface, modal_image, renderer, clock):
-        super().__init__(x, y, modal_surface, modal_image, renderer, clock)
+    def __init__(self, x, y, modal_image, screen, clock):
+        super().__init__(x, y, modal_image, screen, clock)
         self.character_cards = {}
         self.create_character_cards()
         self.selected_character = None
@@ -28,11 +25,11 @@ class SelectCharacterModal(Modal):
         for name, x, y in characters:
             normal_img = pygame.image.load(
                 os.path.join(assets_dir, f"card-{name}.png")
-            )
+            ).convert_alpha()
 
             hover_img = pygame.image.load(
                 os.path.join(assets_dir, f"card-{name}-hover.png")
-            )
+            ).convert_alpha()
 
             self.character_cards[name] = CharacterCard(
                 x, y,
@@ -44,12 +41,11 @@ class SelectCharacterModal(Modal):
     def select_character(self, name):
         print(f"Personagem selecionado: {name}")
         self.selected_character = name
-        game = Game(self.selected_character, self.renderer)
-        game.run()
 
     def show(self):
         showing = True
         while showing:
+            background_surface = self.screen.copy()
             mouse_pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -59,14 +55,12 @@ class SelectCharacterModal(Modal):
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
+                        self.selected_character = None
                         showing = False
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     for card in self.character_cards.values():
                         if card.handle_event(event):
-                            # Character is selected, select_character will be called
-                            # which starts the game. We set showing to false
-                            # to exit the modal loop, though the game has taken over.
                             showing = False
                             break
                     if not showing:
@@ -75,15 +69,13 @@ class SelectCharacterModal(Modal):
             for card in self.character_cards.values():
                 card.update_hover(mouse_pos)
             
-            frame_surface = self.modal_surface.copy()
-            frame_surface.blit(self.modal_image, self.modal_rect)
+            self.screen.blit(background_surface, (0, 0))
+            self.screen.blit(self.modal_image, self.modal_rect)
 
             for card in self.character_cards.values():
-                card.draw_to_surface(frame_surface)
+                card.draw_to_surface(self.screen)
             
-            modal_texture = Texture.from_surface(self.renderer, frame_surface)
-            self.renderer.clear()
-            self.renderer.blit(modal_texture)
-            self.renderer.present()
-
+            pygame.display.flip()
             self.clock.tick(60)
+        
+        return self.selected_character

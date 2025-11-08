@@ -1,11 +1,10 @@
 import pygame
 
 class Modal:
-    def __init__(self, x,y, modal_surface, modal_image, renderer, clock):
-        self.modal_surface = modal_surface
+    def __init__(self, x, y, modal_image, screen, clock):
         self.modal_image = modal_image
         self.modal_rect = modal_image.get_rect(topleft=(x, y))  
-        self.renderer = renderer
+        self.screen = screen
         self.clock = clock
     
     def show(self):

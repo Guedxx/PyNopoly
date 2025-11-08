@@ -2,17 +2,18 @@ import os
 import sys
 import pygame
 from pygame import *
-from pygame._sdl2.video import Texture
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from src.engine.Jogador import Jogador
 from src.ui.animation import AnimacaoMovimento
+from src.engine.Partida import Partida
+from src.engine.Fabricas import TabuleiroPadraoFactory
 
 class Game:
-    def __init__(self, selected_character, renderer):
+    def __init__(self, selected_characters, screen): # Changed to screen
         # Core components
-        self.renderer = renderer
+        self.screen = screen # Use the passed screen
         self.clock = pygame.time.Clock()
 
         # Constants
@@ -22,13 +23,15 @@ class Game:
         
         # Assets
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
-        self.background = pygame.image.load(os.path.join(assets_dir, 'tabuleiro.png'))
-        self.tabuleiro_img = pygame.image.load(os.path.join(assets_dir, 'tabuleirobase.png'))
+        self.background = pygame.image.load(os.path.join(assets_dir, 'tabuleiro.png')).convert()
+        self.tabuleiro_img = pygame.image.load(os.path.join(assets_dir, 'tabuleirobase.png')).convert_alpha()
         self.icon_jogadores = {
-            0: pygame.image.load(os.path.join(assets_dir, 'icone-gato-azul.png')),
-            1: pygame.image.load(os.path.join(assets_dir, 'icone-gato-rosa.png')),
-            2: pygame.image.load(os.path.join(assets_dir, 'icone-gato-roxo.png')),
-            3: pygame.image.load(os.path.join(assets_dir, 'icone-gato-verde.png'))
+            "azul": pygame.image.load(os.path.join(assets_dir, 'icone-gato-azul.png')).convert_alpha(),
+            "rosa": pygame.image.load(os.path.join(assets_dir, 'icone-gato-rosa.png')).convert_alpha(),
+            "roxo": pygame.image.load(os.path.join(assets_dir, 'icone-gato-roxo.png')).convert_alpha(),
+            "verde": pygame.image.load(os.path.join(assets_dir, 'icone-gato-verde.png')).convert_alpha(),
+            "amarelo": pygame.image.load(os.path.join(assets_dir, 'icone-gato.png')).convert_alpha(), # Placeholder
+            "ciano": pygame.image.load(os.path.join(assets_dir, 'icove-gato-azul.png')).convert_alpha(), # Placeholder
         }
 
         # Game state
@@ -36,18 +39,16 @@ class Game:
         self.valor_dado1 = 0
         self.valor_dado2 = 0
         
-        # Players
-        pecas = {0: "azul", 1: "verde", 2: "rosa", 3: "roxo"}
-        
-        # Player 1 is the human-selected character
-        player1 = Jogador(pecas[0], selected_character) 
-        
-        self.jogadores = [player1]
-        # Add other default players
-        for i in range(1, 4):
-            self.jogadores.append(Jogador(pecas[i], f"Jogador {i+1}"))
+        # Engine Setup
+        # For now, we add default players if less than 2 are selected.
+        player_names = selected_characters
+        if len(player_names) < 2:
+            player_names.extend([f"Jogador {i+2}" for i in range(2 - len(player_names))])
 
-        self.current_player_idx = 0
+        factory = TabuleiroPadraoFactory()
+        self.partida = Partida(player_names, factory)
+        self.partida.iniciar_jogo()
+        self.jogadores = self.partida.jogadores
 
         # Board positions
         self.casas_x_y = {
@@ -67,16 +68,19 @@ class Game:
         # Animation
         self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
 
-    def get_draw_pos(self, jogador_idx: int, pos_interpolada=None):
-        jogador = self.jogadores[jogador_idx]
-        
+    def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
         if pos_interpolada:
             base = pos_interpolada
         else:
             base = self.casas_x_y.get(jogador.posicao, self.casas_x_y[0])
         
-        offset = (jogador_idx * 18, 0)
-        return (base[0] + offset[0], base[1] + offset[1])
+        # Find player index for offset
+        try:
+            jogador_idx = self.jogadores.index(jogador)
+            offset = (jogador_idx * 18, 0)
+            return (base[0] + offset[0], base[1] + offset[1])
+        except ValueError:
+            return base # Should not happen
 
     def run(self):
         while self.running:
@@ -86,55 +90,68 @@ class Game:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     self.running = False
-                    pygame.quit()
-                    sys.exit()
                 elif event.type == KEYDOWN:
                     if event.key == K_SPACE:
                         if not self.animacao.ativa and not self.animacao.tem_passos_pendentes():
-                            jogador_atual = self.jogadores[self.current_player_idx]
-                            dados = jogador_atual.dados.lancar()
-                            valor_total = sum(dados)
-                            self.valor_dado1, self.valor_dado2 = dados[0], dados[1]
+                            resultado_turno = self.partida.jogar_rodada()
                             
-                            print(f"\n=== Turno do Jogador {self.current_player_idx} ({jogador_atual.peca}) ===")
-                            print(f"Dados: {dados} = {valor_total}")
-                            print(f"Posição inicial: {jogador_atual.posicao}")
-                            
-                            self.animacao.iniciar(self.current_player_idx, jogador_atual, valor_total)
+                            if resultado_turno:
+                                jogador_da_vez = resultado_turno["jogador"]
+                                dados = resultado_turno["dados"]
+                                
+                                print(f"\n=== Turno do Jogador: {jogador_da_vez.nome} ===")
+                                
+                                if resultado_turno["acao"] == "moveu":
+                                    self.valor_dado1, self.valor_dado2 = dados[0], dados[1]
+                                    valor_total = sum(dados)
+                                    
+                                    try:
+                                        jogador_idx = self.jogadores.index(jogador_da_vez)
+                                        pos_real = jogador_da_vez.posicao
+                                        jogador_da_vez.posicao = resultado_turno["posicao_anterior"]
+                                        
+                                        self.animacao.iniciar(jogador_idx, jogador_da_vez, valor_total)
+                                        
+                                        # A posição real será restaurada pela própria animação
+                                        # jogador_da_vez.posicao = pos_real
+
+                                    except ValueError:
+                                        pass # Player not found, should not happen
+                                
+                                elif resultado_turno["acao"] == "preso":
+                                    print(f"{jogador_da_vez.nome} está preso!")
+                                
+                                elif resultado_turno["acao"] == "foi_preso_por_doubles":
+                                    print(f"{jogador_da_vez.nome} foi preso por tirar 3 duplos!")
             
             # Animation management
             if not self.animacao.ativa and self.animacao.tem_passos_pendentes():
-                self.animacao.proximo_passo(self.jogadores[self.animacao.jogador_idx])
+                jogador_animado = self.jogadores[self.animacao.jogador_idx]
+                self.animacao.proximo_passo(jogador_animado)
             
             if not self.animacao.ativa and not self.animacao.tem_passos_pendentes() and self.animacao.jogador_idx is not None:
-                jogador_atual = self.jogadores[self.current_player_idx]
-                print(f"Posição final: {jogador_atual.posicao}")
-                print(f"Casa: {self.casas_x_y.get(jogador_atual.posicao, 'desconhecida')}")
-                
-                self.current_player_idx = (self.current_player_idx + 1) % len(self.jogadores)
                 self.animacao.finalizar()
-                print(f"\n>>> Próximo turno: Jogador {self.current_player_idx} ({self.jogadores[self.current_player_idx].peca})")
             
             pos_interpolada = None
             if self.animacao.ativa:
-                pos_interpolada = self.animacao.atualizar(self.jogadores[self.animacao.jogador_idx])
+                jogador_animado = self.jogadores[self.animacao.jogador_idx]
+                pos_interpolada = self.animacao.atualizar(jogador_animado)
             
             # Rendering
-            frame_surface = self.background.copy()
-            frame_surface.blit(self.tabuleiro_img, (328, 0))
+            self.screen.blit(self.background, (0, 0))
+            self.screen.blit(self.tabuleiro_img, (328, 0))
             
             for i, jogador in enumerate(self.jogadores):
-                draw_pos = self.get_draw_pos(i, pos_interpolada if self.animacao.ativa and i == self.animacao.jogador_idx else None)
-                frame_surface.blit(self.icon_jogadores[i], draw_pos)
+                is_animating = self.animacao.ativa and i == self.animacao.jogador_idx
+                current_pos = pos_interpolada if is_animating else None
+                
+                draw_pos = self.get_draw_pos(jogador, current_pos)
+                self.screen.blit(self.icon_jogadores[jogador.peca], draw_pos)
             
             texto_dado1 = self.font.render(str(self.valor_dado1), True, (255, 255, 255))
             texto_dado2 = self.font.render(str(self.valor_dado2), True, (255, 255, 255))
             
-            frame_surface.blit(texto_dado1, (1190, 540))
-            frame_surface.blit(texto_dado2, (1230, 540))
+            self.screen.blit(texto_dado1, (1190, 540))
+            self.screen.blit(texto_dado2, (1230, 540))
 
-            # Convert to texture and render
-            game_texture = Texture.from_surface(self.renderer, frame_surface)
-            self.renderer.clear()
-            self.renderer.blit(game_texture)
-            self.renderer.present()
+            pygame.display.flip()
