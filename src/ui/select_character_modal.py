@@ -39,11 +39,15 @@ class SelectCharacterModal(Modal):
             )
 
     def select_character(self, name):
-        print(f"Personagem selecionado: {name}")
         self.selected_character = name
 
-    def show(self):
+    def show(self, available_characters):
         showing = True
+        self.selected_character = None
+
+        # Filter cards to only show available characters
+        active_cards = {name: card for name, card in self.character_cards.items() if name in available_characters}
+
         while showing:
             background_surface = self.screen.copy()
             mouse_pos = pygame.mouse.get_pos()
@@ -52,30 +56,25 @@ class SelectCharacterModal(Modal):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
-                        self.selected_character = None
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    showing = False
+                
+                for card in active_cards.values():
+                    if card.handle_event(event):
                         showing = False
-
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    for card in self.character_cards.values():
-                        if card.handle_event(event):
-                            showing = False
-                            break
-                    if not showing:
                         break
-            
-            for card in self.character_cards.values():
-                card.update_hover(mouse_pos)
+                if not showing:
+                    break
             
             self.screen.blit(background_surface, (0, 0))
             self.screen.blit(self.modal_image, self.modal_rect)
 
-            for card in self.character_cards.values():
-                card.draw_to_surface(self.screen)
-            
+            for char_name, card in self.character_cards.items():
+                is_active = char_name in active_cards
+                card.update_hover(mouse_pos if is_active else (-1, -1)) # Update hover only if active
+                card.draw_to_surface(self.screen) # Let the card draw itself
+
             pygame.display.flip()
             self.clock.tick(60)
-        
+            
         return self.selected_character

@@ -59,14 +59,29 @@ class Menu:
         self.exit_button = Button(200, 560, exit_button_image, self.exit_game)
     
     def start_game_flow(self):
-        selected_char = self.select_character_modal.show()
-        if selected_char:
-            player_count = self.player_count_modal.show()
-            if player_count:
-                player_names = [selected_char]
-                player_names.extend([f"Jogador {i+2}" for i in range(player_count - 1)])
+        # First, get the number of players
+        player_count = self.player_count_modal.show()
+        
+        if player_count:
+            selected_characters = []
+            # Get a list of all possible characters from the modal's cards
+            available_characters = list(self.select_character_modal.character_cards.keys())
+            
+            # Loop for each player to select a character
+            for i in range(player_count):
+                # Pass the list of available characters to the modal
+                chosen_char = self.select_character_modal.show(available_characters)
                 
-                game = Game(player_names, self.screen)
+                if chosen_char:
+                    selected_characters.append(chosen_char)
+                    available_characters.remove(chosen_char) # Character is no longer available
+                else:
+                    # If a player cancels, abort the game setup
+                    return
+
+            # If all players have selected a character, start the game
+            if len(selected_characters) == player_count:
+                game = Game(selected_characters, self.screen)
                 game.run()
     
     def exit_game(self):
