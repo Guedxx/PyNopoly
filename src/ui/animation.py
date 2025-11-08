@@ -6,38 +6,38 @@ class AnimacaoMovimento:
         self.num_casas = num_casas
         self.ativa = False
         self.jogador_idx = None
-        self.passos_restantes = []  # Lista de índices de casas a animar
+        self.passos_restantes = []
         self.pos_inicio = (0, 0)
         self.pos_fim = (0, 0)
         self.tempo_inicio = 0
+        self.casa_origem_anim = 0
         self.casa_destino_atual = 0
         self.duracao_passo = 180  # ms por casa
     
-    def iniciar(self, jogador_idx, jogador, valor_dados):
-        """Inicia a animação de movimento para um jogador"""
+    def iniciar(self, jogador_idx, path, pos_inicial):
+        """Inicia a animação de movimento para um jogador usando um caminho e uma posição inicial."""
         self.jogador_idx = jogador_idx
-        self.passos_restantes = []
+        self.passos_restantes = path
+        self.casa_origem_anim = pos_inicial
         
-        # Calcula todas as casas intermediárias do movimento
-        posicao_inicial = jogador.posicao
-        for i in range(1, valor_dados + 1):
-            proxima_casa = (posicao_inicial + i) % self.num_casas
-            self.passos_restantes.append(proxima_casa)
-        
-        print(f"Animação iniciada: Jogador {jogador_idx} vai da casa {posicao_inicial} para {self.passos_restantes[-1]}")
+        if self.passos_restantes:
+            print(f"Animação iniciada: Jogador {jogador_idx} da casa {pos_inicial} seguirá o caminho: {path}")
     
-    def proximo_passo(self, jogador):
+    def proximo_passo(self):
         """Inicia a animação do próximo passo"""
         if not self.passos_restantes:
+            self.ativa = False
             return False
         
         self.casa_destino_atual = self.passos_restantes.pop(0)
-        casa_origem = jogador.posicao
         
-        self.pos_inicio = self.casas_x_y.get(casa_origem, self.casas_x_y[0])
+        self.pos_inicio = self.casas_x_y.get(self.casa_origem_anim, self.casas_x_y[0])
         self.pos_fim = self.casas_x_y.get(self.casa_destino_atual, self.casas_x_y[0])
         self.tempo_inicio = pygame.time.get_ticks()
         self.ativa = True
+        
+        # A origem da proxima animação será o destino da atual
+        self.casa_origem_anim = self.casa_destino_atual
         
         return True
     
@@ -55,9 +55,10 @@ class AnimacaoMovimento:
         
         # Se completou o passo
         if t >= 1.0:
+            # A posição canônica do jogador só é atualizada aqui, ao final de cada passo.
+            # Isso previne a dessincronização entre a UI e o estado do motor.
             jogador.posicao = self.casa_destino_atual
             self.ativa = False
-            print(f"Jogador {self.jogador_idx} chegou na casa {self.casa_destino_atual}")
             return None
         
         return (int(x), int(y))

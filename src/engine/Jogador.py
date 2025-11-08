@@ -192,7 +192,7 @@ class Jogador:
 
     def ir_para_cadeia(self):
         print(f"{self.peca} foi para a cadeia!")
-        self.posicao = 10
+        self.posicao = 30
         self.mudar_estado(JogadorPresoState())
 
     def pagar_a_jogadores(self, jogadores: Optional[List[Jogador]], valor: int):

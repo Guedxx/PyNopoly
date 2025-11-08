@@ -59,14 +59,9 @@ class Partida:
 
         if valor_dados is None: # O jogador está preso e não pagou/tirou dados iguais
             self.proximo_jogador()
-            return {
-                "jogador": jogador_da_vez,
-                "dados": None,
-                "acao": "preso"
-            }
+            return {"jogador": jogador_da_vez, "dados": None, "acao": "preso"}
 
         is_double = valor_dados[0] == valor_dados[1]
-
         if is_double:
             jogador_da_vez.doubles_consecutivos += 1
         else:
@@ -79,38 +74,46 @@ class Partida:
             return {
                 "jogador": jogador_da_vez,
                 "dados": valor_dados,
-                "acao": "foi_preso_por_doubles"
+                "acao": "foi_preso_por_doubles",
+                "path": [10] # Path direto para a cadeia
             }
 
+        # Calcula o caminho do movimento dos dados
+        path = []
         posicao_anterior = jogador_da_vez.posicao
-        jogador_da_vez.mover(sum(valor_dados))
+        for i in range(1, sum(valor_dados) + 1):
+            path.append((posicao_anterior + i) % 40)
+        
+        posicao_depois_dado = path[-1] if path else posicao_anterior
+        jogador_da_vez.posicao = posicao_depois_dado
+        
         passou_pelo_inicio = jogador_da_vez.posicao < posicao_anterior
-
         if passou_pelo_inicio:
             self.banco.pagar_salario(jogador_da_vez)
 
-        casa_atual = self.tabuleiro.get_casa_na_posicao(jogador_da_vez.posicao)
+        # Executa a ação da casa e verifica se houve movimento secundário
+        casa_atual = self.tabuleiro.get_casa_na_posicao(posicao_depois_dado)
         if casa_atual:
-            # A ação da casa é executada aqui. A UI pode precisar de mais detalhes
-            # sobre o que aconteceu, o que pode exigir mais refatoração no futuro.
             casa_atual.executar_acao(jogador_da_vez, sum(valor_dados), self.jogadores, self.baralho_sorte, self.baralho_cofre)
+
+        posicao_final = jogador_da_vez.posicao
+        if posicao_final != posicao_depois_dado:
+            path.append(posicao_final) # Adiciona o 'salto' (ex: para a cadeia) ao caminho
 
         self.verificar_fim_de_jogo()
         
-        # Prepara o resultado para a UI
         resultado_turno = {
             "jogador": jogador_da_vez,
             "dados": valor_dados,
+            "acao": "moveu",
+            "path": path,
             "posicao_anterior": posicao_anterior,
-            "posicao_nova": jogador_da_vez.posicao,
-            "passou_pelo_inicio": passou_pelo_inicio,
-            "acao": "moveu"
+            "passou_pelo_inicio": passou_pelo_inicio
         }
 
         if not self.em_andamento:
             resultado_turno["fim_de_jogo"] = True
-            return resultado_turno
-
+        
         if not is_double:
             self.proximo_jogador()
         

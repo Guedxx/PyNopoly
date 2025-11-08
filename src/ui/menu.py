@@ -5,6 +5,7 @@ import os
 from .button import Button
 from .credits_modal import CreditsModal
 from .select_character_modal import SelectCharacterModal
+from .player_count_modal import PlayerCountModal
 from .game import Game
 
 
@@ -42,17 +43,31 @@ class Menu:
                                                       select_character_image,
                                                       self.screen,
                                                       self.clock)
+        # Using credits modal background as a generic one for player count
+        modal_w = select_character_image.get_width()
+        modal_h = select_character_image.get_height()
+        modal_x = (self.screen.get_width() - modal_w) // 2
+        modal_y = (self.screen.get_height() - modal_h) // 2
+        self.player_count_modal = PlayerCountModal(modal_x, modal_y,
+                                                   select_character_image.copy(),
+                                                   self.screen,
+                                                   self.clock)
 
         # Buttons
         self.start_button = Button(200, 380, start_button_image, self.start_game_flow)
         self.credits_button = Button(200, 470, credits_button_image, self.credits_modal.show)
         self.exit_button = Button(200, 560, exit_button_image, self.exit_game)
-
+    
     def start_game_flow(self):
         selected_char = self.select_character_modal.show()
         if selected_char:
-            game = Game([selected_char], self.screen)
-            game.run()
+            player_count = self.player_count_modal.show()
+            if player_count:
+                player_names = [selected_char]
+                player_names.extend([f"Jogador {i+2}" for i in range(player_count - 1)])
+                
+                game = Game(player_names, self.screen)
+                game.run()
     
     def exit_game(self):
         pygame.quit()
