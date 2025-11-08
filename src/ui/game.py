@@ -10,6 +10,7 @@ from src.ui.animation import AnimacaoMovimento
 from src.engine.Partida import Partida
 from src.engine.Fabricas import TabuleiroPadraoFactory
 from src.ui.buy_property_modal import BuyPropertyModal
+from src.ui.tax_modal import TaxModal
 
 class Game:
     def __init__(self, selected_characters, screen):
@@ -66,7 +67,7 @@ class Game:
         self.num_casas = len(self.casas_x_y)
         self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
 
-        # Pre-load and scale modal image for dimensions
+        # Pre-load and scale modal images for dimensions
         unscaled_buy_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-comprar-propriedade.png')).convert_alpha()
         original_width = unscaled_buy_modal_image.get_width()
         original_height = unscaled_buy_modal_image.get_height()
@@ -75,6 +76,16 @@ class Game:
         self.buy_property_modal_image = pygame.transform.scale(unscaled_buy_modal_image, (scaled_width, scaled_height))
         self.buy_property_modal_width = self.buy_property_modal_image.get_width()
         self.buy_property_modal_height = self.buy_property_modal_image.get_height()
+
+        unscaled_tax_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-taxa-riqueza.png')).convert_alpha()
+        original_tax_width = unscaled_tax_modal_image.get_width()
+        original_tax_height = unscaled_tax_modal_image.get_height()
+        scaled_tax_width = int(original_tax_width * 1.3)
+        scaled_tax_height = int(original_tax_height * 1.3)
+        self.tax_modal_image = pygame.transform.scale(unscaled_tax_modal_image, (scaled_tax_width, scaled_tax_height))
+        self.tax_modal_width = self.tax_modal_image.get_width()
+        self.tax_modal_height = self.tax_modal_image.get_height()
+
 
     def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
         if pos_interpolada:
@@ -105,11 +116,9 @@ class Game:
 
             # --- Game State Machine ---
             if self.game_state == "ANIMATING":
-                # If a step animation finished, but there are more steps, start the next one
                 if not self.animacao.ativa and self.animacao.tem_passos_pendentes():
                     self.animacao.proximo_passo()
                 
-                # If all animation steps are complete, execute the action for the square
                 elif not self.animacao.ativa and not self.animacao.tem_passos_pendentes():
                     self.game_state = "BUSY"
                     result = self.partida.executar_acao_pos_movimento()
@@ -180,6 +189,15 @@ class Game:
             modal = BuyPropertyModal(modal_x, modal_y, self.buy_property_modal_image, self.screen, self.clock, result["imovel"])
             decision = modal.show()
             self.partida.resolver_compra(decision)
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+
+        elif acao == "pagar_imposto":
+            modal_x = (self.width - self.tax_modal_width) // 2
+            modal_y = (self.height - self.tax_modal_height) // 2
+            modal = TaxModal(modal_x, modal_y, self.tax_modal_image, self.screen, self.clock, result["imposto"])
+            modal.show()
+            self.partida.resolver_pagamento_imposto()
             result = self.partida.finalizar_turno(self.last_roll_was_double)
             self.handle_engine_result(result)
 

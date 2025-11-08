@@ -6,6 +6,7 @@ from .Fabricas import TabuleiroAbstractFactory
 from .Banco import Banco
 from .Cartas import Baralho, gerar_baralho
 from .Imovel import Imovel
+from .Imposto import Imposto
 
 if TYPE_CHECKING:
     from .Tabuleiro.Tabuleiro import Tabuleiro
@@ -99,9 +100,15 @@ class Partida:
                         "imovel": casa_atual
                     }
                 else:
-                    # TODO: Leilão por falta de dinheiro
                     print(f"{jogador_da_vez.nome} não tem dinheiro para comprar. Leilão deveria começar.")
                     return {"acao": "turno_finalizado"}
+            
+            elif isinstance(casa_atual, Imposto):
+                return {
+                    "acao": "pagar_imposto",
+                    "jogador": jogador_da_vez,
+                    "imposto": casa_atual
+                }
 
             casa_atual.executar_acao(jogador_da_vez, 0, self.jogadores, self.baralho_sorte, self.baralho_cofre)
             
@@ -128,6 +135,17 @@ class Partida:
             # TODO: Iniciar leilão
             print(f"{jogador.nome} recusou a compra de {casa_atual.nome}. Leilão deveria começar.")
 
+    def resolver_pagamento_imposto(self):
+        jogador = self.jogadores[self.jogador_atual_idx]
+        casa_atual = self.tabuleiro.get_casa_na_posicao(jogador.posicao)
+
+        if not isinstance(casa_atual, Imposto):
+            return
+        
+        jogador.enviar_dinheiro(casa_atual.valor_imposto)
+        print(f"{jogador.nome} pagou ${casa_atual.valor_imposto} de imposto.")
+
+
     def finalizar_turno(self, is_double: bool):
         self.verificar_fim_de_jogo()
         if not self.em_andamento:
@@ -136,7 +154,6 @@ class Partida:
         if not is_double:
             self.proximo_jogador()
         else:
-            # O jogador tirou um duplo, pode jogar de novo
             print(f"{self.jogadores[self.jogador_atual_idx].nome} tirou um duplo e joga de novo!")
         
         self.dados_rolados_neste_turno = False
