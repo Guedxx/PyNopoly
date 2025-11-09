@@ -14,14 +14,33 @@ class AuctionModal(Modal):
         self.partida = partida
 
         # Fonts
-        self.font = pygame.font.Font(None, 32)
-        self.title_font = pygame.font.Font(None, 42)
-        self.price_font = pygame.font.Font(None, 52)
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        fonte = os.path.join(assets_dir, 'fonte')
+        fonte_path = os.path.join(fonte, 'LilitaOne-Regular.ttf')
+        self.font = pygame.font.Font(fonte_path, 22)
+        self.title_font = pygame.font.Font(fonte_path, 22)
+        self.price_font = pygame.font.Font(fonte_path, 22)
 
         # Buttons
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         lance_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-dar-lance.png')).convert_alpha()
         desistir_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-desistir.png')).convert_alpha()
+
+        self.new_auction_image = pygame.image.load(os.path.join(assets_dir, 'leilao_card.png')).convert_alpha()
+        CARD_SCALE = 1  # Escala da carta
+
+        # Redimensiona a carta
+        orig_w, orig_h = self.new_auction_image.get_size()
+        new_w = int(orig_w * CARD_SCALE)
+        new_h = int(orig_h * CARD_SCALE)
+        if new_w <= 0: new_w = 1
+        if new_h <= 0: new_h = 1
+        self.new_auction_image = pygame.transform.smoothscale(self.new_auction_image, (new_w, new_h))
+        
+        # Centraliza na tela
+        screen_w, screen_h = screen.get_size()
+        self.carta_x = (screen_w - new_w) // 2
+        self.carta_y = (screen_h - new_h) // 2
 
         # Input box
         self.input_rect = pygame.Rect(self.modal_rect.centerx - 100, self.modal_rect.y + 200, 200, 40)
@@ -96,35 +115,31 @@ class AuctionModal(Modal):
             
             # Drawing
             self.screen.blit(background_capture, (0, 0))
-            self.screen.blit(self.modal_image, self.modal_rect)
+            self.screen.blit(self.new_auction_image, (self.carta_x, self.carta_y))
 
             # Title
-            title_surf = self.title_font.render(f"Leilão: {self.imovel.nome}", True, (255, 255, 255))
-            title_rect = title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 50))
+            title_surf = self.title_font.render(f"{self.imovel.nome}", True, (255, 255, 255))
+            title_rect = title_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 51))
             self.screen.blit(title_surf, title_rect)
 
             # Highest bid
-            maior_lance_text = f"Maior lance: $ {self.partida.maior_lance}"
+            maior_lance_text = f"{self.partida.maior_lance}"
             maior_lance_surf = self.font.render(maior_lance_text, True, (255, 255, 255))
-            maior_lance_rect = maior_lance_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 100))
+            maior_lance_rect = maior_lance_surf.get_rect(center=(self.modal_rect.centerx+35, self.modal_rect.y + 98))
             self.screen.blit(maior_lance_surf, maior_lance_rect)
 
             # Bid author
             if self.partida.jogador_maior_lance:
-                autor_text = f"Autor: {self.partida.jogador_maior_lance.nome}"
+                autor_text = f"{self.partida.jogador_maior_lance.nome}"
                 autor_surf = self.font.render(autor_text, True, (255, 255, 255))
-                autor_rect = autor_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 140))
+                autor_rect = autor_surf.get_rect(center=(self.modal_rect.centerx+10, self.modal_rect.y + 140))
                 self.screen.blit(autor_surf, autor_rect)
 
             # Current player
-            if not self.partida.jogadores_leilao or self.partida.leilao_jogador_atual_idx >= len(self.partida.jogadores_leilao):
-                self.should_close = True
-                continue
-            
             jogador_atual = self.partida.jogadores_leilao[self.partida.leilao_jogador_atual_idx]
-            jogador_text = f"Vez de: {jogador_atual.nome}"
+            jogador_text = f"{jogador_atual.nome}"
             jogador_surf = self.font.render(jogador_text, True, (255, 255, 255))
-            jogador_rect = jogador_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 180))
+            jogador_rect = jogador_surf.get_rect(center=(self.modal_rect.centerx+10, self.modal_rect.y + 143))
             self.screen.blit(jogador_surf, jogador_rect)
 
             # Input box

@@ -12,27 +12,47 @@ class PayRentModal(Modal):
         self.imovel = imovel
 
         # Fonts
-        self.font = pygame.font.Font(None, 32)
-        self.title_font = pygame.font.Font(None, 42)
-        self.price_font = pygame.font.Font(None, 52)
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        fonte = os.path.join(assets_dir, 'fonte')
+        fonte_path = os.path.join(fonte, 'LilitaOne-Regular.ttf')
+
+        self.font = pygame.font.Font(fonte_path, 24)
+        self.title_font = pygame.font.Font(fonte_path, 24)
+        self.price_font = pygame.font.Font(fonte_path, 24)
 
         # Buttons
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         ok_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-ok.png')).convert_alpha()
+        self.new_rent_image = pygame.image.load(os.path.join(assets_dir, 'pay_rent.png')).convert_alpha()
+        CARD_SCALE = 1  # Escala da carta
+
+        # Redimensiona a carta
+        orig_w, orig_h = self.new_rent_image.get_size()
+        new_w = int(orig_w * CARD_SCALE)
+        new_h = int(orig_h * CARD_SCALE)
+        if new_w <= 0: new_w = 1
+        if new_h <= 0: new_h = 1
+        self.new_rent_image = pygame.transform.smoothscale(self.new_rent_image, (new_w, new_h))
+        
+        # Centraliza na tela
+        screen_w, screen_h = screen.get_size()
+        self.carta_x = (screen_w - new_w) // 2
+        self.carta_y = (screen_h - new_h) // 2
+
 
         # Title (Property Name)
         self.title_surf = self.title_font.render(self.imovel.nome, True, (255, 255, 255))
-        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 70))
+        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 50))
         
         # Owner
         owner_text = f"{self.imovel.dono.nome}"
         self.owner_surf = self.font.render(owner_text, True, (255, 255, 255))
-        self.owner_rect = self.owner_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 120))
+        self.owner_rect = self.owner_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 105))
 
         # Rent
-        rent_text = f"pague {self.imovel.calcular_aluguel()}"
+        rent_text = f"{self.imovel.calcular_aluguel()}"
         self.rent_surf = self.price_font.render(rent_text, True, (255, 255, 255))
-        self.rent_rect = self.rent_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 170))
+        self.rent_rect = self.rent_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 150))
 
         # Buttons
         btn_y = self.modal_rect.y + 215
@@ -63,7 +83,7 @@ class PayRentModal(Modal):
             
             # Drawing
             self.screen.blit(background_capture, (0, 0)) # Redraw the background
-            self.screen.blit(self.modal_image, self.modal_rect)
+            self.screen.blit(self.new_rent_image, (self.carta_x, self.carta_y))
             self.screen.blit(self.title_surf, self.title_rect)
             self.screen.blit(self.owner_surf, self.owner_rect)
             self.screen.blit(self.rent_surf, self.rent_rect)
