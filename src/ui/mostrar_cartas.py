@@ -1,6 +1,7 @@
 import random
 import pygame
 from pathlib import Path
+import os
 
 # Configurações
 CARD_SCALE = 0.5  # Escala da carta
@@ -72,8 +73,11 @@ def mostrar_carta(carta, screen, clock, jogador=None, jogadores=None):
         return False
     
     # Configura fonte para texto
+    assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+    fonte = os.path.join(assets_dir, 'fonte')
+    fonte_path = os.path.join(fonte, 'LilitaOne-Regular.ttf')
+    fonte_instrucao = pygame.font.Font(fonte_path, 18)
 
-    fonte_instrucao = pygame.font.SysFont("arial", 16, bold=True)
     fundo_salvo = screen.copy()
 
     # Loop de exibição
@@ -107,9 +111,8 @@ def mostrar_carta(carta, screen, clock, jogador=None, jogadores=None):
         screen.blit(texto_instrucao, texto_rect)
         
         texto_u = str(carta.nome)[6::]
-        fonte= pygame.font.get_default_font()              ##### carrega com a fonte padrão
-        fontesys=pygame.font.SysFont("helvetica", 12, bold=True)           ##### usa a fonte padrão
-        txttela = fontesys.render(texto_u, 1, (255,255,255))  ##### renderiza o texto na cor desejada
+        fontesys=pygame.font.Font(fonte_path, 12)           
+        txttela = fontesys.render(texto_u, 1, (255,255,255)) 
         screen.blit(txttela,((screen_w//2 - 100), screen_h - 270))
 
         pygame.display.flip()

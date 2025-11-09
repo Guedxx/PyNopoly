@@ -23,7 +23,11 @@ class Game:
         self.clock = pygame.time.Clock()
         self.height = 720
         self.width = 1280
-        self.font = pygame.font.Font(None, 36)
+
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        fonte = os.path.join(assets_dir, 'fonte')
+        fonte_path = os.path.join(fonte, 'LilitaOne-Regular.ttf')
+        self.font = pygame.font.Font(fonte_path, 32)
         
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         self.background = pygame.image.load(os.path.join(assets_dir, 'gamebg.png')).convert()
@@ -195,7 +199,7 @@ class Game:
 
                         money_text = f"{jogador.dinheiro}"
                         money_surface = self.font.render(money_text, True, (255, 255, 255))
-                        text_pos = (rect.left + 150, rect.top + 30)
+                        text_pos = (rect.left + 140, rect.top + 30)
                         self.screen.blit(money_surface, text_pos)
 
             self.screen.blit(self.tabuleiro_img, self.tabuleiro_rect)
@@ -211,8 +215,8 @@ class Game:
             self.screen.blit(self.dice_display_image, (1141, 530))
             texto_dado1 = self.font.render(str(self.valor_dado1), True, (255, 255, 255))
             texto_dado2 = self.font.render(str(self.valor_dado2), True, (255, 255, 255))
-            self.screen.blit(texto_dado1, (1200, 540))
-            self.screen.blit(texto_dado2, (1240, 540))
+            self.screen.blit(texto_dado1, (1198, 535))
+            self.screen.blit(texto_dado2, (1240, 535))
 
             self.roll_dice_button.update_hover(mouse_pos)
             self.roll_dice_button.draw_to_surface(self.screen)
