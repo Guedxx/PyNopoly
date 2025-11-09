@@ -117,7 +117,7 @@ class AuctionModal(Modal):
                 self.screen.blit(autor_surf, autor_rect)
 
             # Current player
-            if not self.partida.jogadores_leilao:
+            if not self.partida.jogadores_leilao or self.partida.leilao_jogador_atual_idx >= len(self.partida.jogadores_leilao):
                 self.should_close = True
                 continue
             
