@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 from .Tabuleiro.CasaTabuleiro import CasaTabuleiro
 
 if TYPE_CHECKING:
-    from ..Jogador import Jogador
-    from ..Cartas import Baralho
+    from src.engine.Jogador import Jogador
+    from src.engine.Cartas import Baralho
 
 class Imposto(CasaTabuleiro):
     def __init__(self, nome: str, posicao: int, valor_imposto: int):
