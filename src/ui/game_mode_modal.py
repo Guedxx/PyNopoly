@@ -16,15 +16,16 @@ class GameModeModal(Modal):
         pvp_button_img = pygame.image.load(os.path.join(assets_dir, 'button-pvp.png')).convert_alpha()
         ias_button_img = pygame.image.load(os.path.join(assets_dir, 'button-ias.png')).convert_alpha()
 
+        
         # Position buttons
-        btn_y = self.modal_rect.y + 150
+        btn_y = self.modal_rect.y + 80
         button_spacing = 40
         total_buttons_width = pvp_button_img.get_width() + ias_button_img.get_width() + button_spacing
         start_x = self.modal_rect.centerx - (total_buttons_width // 2) - 20
 
-        self.pvp_button = Button(start_x+25, btn_y, pvp_button_img, lambda: self.set_mode("pvp"))
+        self.pvp_button = Button(start_x+25, btn_y+60, pvp_button_img, lambda: self.set_mode("pvp"))
         # The AI button does nothing for now
-        self.ias_button = Button((start_x) + pvp_button_img.get_width() + button_spacing, btn_y, ias_button_img, lambda: None)
+        self.ias_button = Button((start_x) + pvp_button_img.get_width() + button_spacing, btn_y+60, ias_button_img, lambda: None)
         
         self.buttons = [self.pvp_button, self.ias_button]
 

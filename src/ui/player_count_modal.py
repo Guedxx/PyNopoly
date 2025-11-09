@@ -1,5 +1,6 @@
 import pygame
 import sys
+import os
 from .modal_interface import Modal
 from .button import Button
 
@@ -16,20 +17,18 @@ def create_text_button(text, width, height, font):
 
 class PlayerCountModal(Modal):
     def __init__(self, x, y, modal_image, screen, clock, background_surface):
-        # Cover the original text on the background image before initializing the modal
-        cover_rect = pygame.Rect(40, 20, 720, 65)
-        purple_color = (198, 141, 255) # A purple sampled from the image
-        pygame.draw.rect(modal_image, purple_color, cover_rect)
-
+        
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        self.new_background_image = pygame.image.load(os.path.join(assets_dir, 'number_players.png')).convert_alpha()
+        self.new_background_image = pygame.transform.scale(
+            self.new_background_image, screen.get_size()
+        )
 
         super().__init__(x, y, modal_image, screen, clock, background_surface)
         self.player_count = None
         
         font = pygame.font.Font(None, 48)
         title_font = pygame.font.Font(None, 36)
-
-        self.title_surf = title_font.render("Selecione o número de jogadores:", True, (255, 255, 255))
-        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 60))
         
         # Create buttons
         btn_w, btn_h = 80, 60
@@ -69,10 +68,7 @@ class PlayerCountModal(Modal):
                     break
             
             # Drawing
-            self.screen.blit(self.background_surface, (0, 0))
-            self.screen.blit(self.modal_image, self.modal_rect)
-            self.screen.blit(self.title_surf, self.title_rect)
-
+            self.screen.blit(self.new_background_image, (0, 0))
             for button in self.buttons:
                 button.update_hover(mouse_pos)
                 button.draw_to_surface(self.screen)

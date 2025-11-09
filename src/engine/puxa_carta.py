@@ -150,12 +150,12 @@ def mostra_uma_carta(baralho):
     if fonte:
         fonte_titulo = pygame.font.Font(fonte, FONTE_TITULO)
         fonte_texto = pygame.font.Font(fonte, FONTE_TEXTO)
-        rod_font = pygame.font.Font(fonte, 16)
+        rod_font = pygame.font.Font(fonte, 12)
         
     else:
         fonte_titulo = pygame.font.Font(None, FONTE_TITULO, bold=True)
         fonte_texto = pygame.font.SysFont(None, FONTE_TEXTO)
-        rod_font = pygame.font.SysFont(None, 16)
+        rod_font = pygame.font.SysFont(None, 12)
 
     # escolhe a primeira carta aleatória
     chave_atual, carta_atual = escolhe_carta_aleatoria(baralho)
