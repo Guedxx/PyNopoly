@@ -1,4 +1,5 @@
 import pygame
+import os
 
 class Button:
     def __init__(self, x, y, image, callback=None):
@@ -6,11 +7,16 @@ class Button:
         self.rect = self.image.get_rect(topleft=(x, y))
         self.callback = callback
         self.is_hovered = False
+        
+        # Load sound
+        sound_path = os.path.join('sounds', 'button.wav')
+        self.click_sound = pygame.mixer.Sound(sound_path)
 
     def handle_event(self, event):
         """Handle mouse click events"""
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and self.rect.collidepoint(event.pos):
+                self.click_sound.play() # Play sound on click
                 if self.callback:
                     self.callback()
                 return True

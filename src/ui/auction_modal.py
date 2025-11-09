@@ -117,6 +117,10 @@ class AuctionModal(Modal):
                 self.screen.blit(autor_surf, autor_rect)
 
             # Current player
+            if not self.partida.jogadores_leilao:
+                self.should_close = True
+                continue
+            
             jogador_atual = self.partida.jogadores_leilao[self.partida.leilao_jogador_atual_idx]
             jogador_text = f"Vez de: {jogador_atual.nome}"
             jogador_surf = self.font.render(jogador_text, True, (255, 255, 255))
