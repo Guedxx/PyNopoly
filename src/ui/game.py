@@ -59,7 +59,7 @@ class Game:
         self.character_icons["default"] = pygame.image.load(os.path.join(assets_dir, 'icone-gato.png')).convert_alpha()
 
         # Load player cards (for corners)
-        cards_dir = os.path.join(assets_dir, 'cards')
+        cards_dir = os.path.join(assets_dir, 'banners')
         self.player_cards = {}
         for jogador in self.jogadores:
             asset_name = character_asset_map.get(jogador.nome)
