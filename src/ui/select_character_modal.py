@@ -4,16 +4,26 @@ from src.ui.modal_interface import Modal
 import pygame, sys
 
 class SelectCharacterModal(Modal):
-    def __init__(self, x, y, modal_image, screen, clock):
-        super().__init__(x, y, modal_image, screen, clock)
+    def __init__(self, x, y, modal_image, screen, clock, background_surface):
+        super().__init__(x, y, modal_image, screen, clock, background_surface)
         self.character_cards = {}
         self.create_character_cards()
         self.selected_character = None
     
     def create_character_cards(self):
-        assets_dir = os.path.join("assets", "characters")
+        assets_dir = os.path.join("assets", "select-character")
 
-        characters = [
+        # Map full character names to asset filenames
+        character_asset_map = {
+            "hellokitty": "kitty",
+            "keroppi": "keropi",
+            "kuromi": "kuromi",
+            "mymelody": "melody",
+            "pompompurin": "pompom",
+            "cinnamoroll": "cinnamon"
+        }
+
+        characters_data = [
             ("hellokitty", 465, 264),
             ("kuromi", 601, 264),
             ("cinnamoroll", 737, 264),
@@ -22,21 +32,22 @@ class SelectCharacterModal(Modal):
             ("keroppi", 737, 428),
         ]
 
-        for name, x, y in characters:
-            normal_img = pygame.image.load(
-                os.path.join(assets_dir, f"card-{name}.png")
-            ).convert_alpha()
+        for name, x, y in characters_data:
+            asset_name = character_asset_map.get(name)
+            if asset_name:
+                normal_img = pygame.image.load(
+                    os.path.join(assets_dir, f"{asset_name}.png")
+                ).convert_alpha()
 
-            hover_img = pygame.image.load(
-                os.path.join(assets_dir, f"card-{name}-hover.png")
-            ).convert_alpha()
+                # Use the same image for hover as there are no separate hover assets
+                hover_img = normal_img 
 
-            self.character_cards[name] = CharacterCard(
-                x, y,
-                normal_img,
-                hover_img,
-                callback=lambda n=name: self.select_character(n)
-            )
+                self.character_cards[name] = CharacterCard(
+                    x, y,
+                    normal_img,
+                    hover_img,
+                    callback=lambda n=name: self.select_character(n)
+                )
 
     def select_character(self, name):
         self.selected_character = name
@@ -45,11 +56,9 @@ class SelectCharacterModal(Modal):
         showing = True
         self.selected_character = None
 
-        # Filter cards to only show available characters
         active_cards = {name: card for name, card in self.character_cards.items() if name in available_characters}
 
         while showing:
-            background_surface = self.screen.copy()
             mouse_pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -66,13 +75,13 @@ class SelectCharacterModal(Modal):
                 if not showing:
                     break
             
-            self.screen.blit(background_surface, (0, 0))
+            self.screen.blit(self.background_surface, (0, 0))
             self.screen.blit(self.modal_image, self.modal_rect)
 
             for char_name, card in self.character_cards.items():
                 is_active = char_name in active_cards
-                card.update_hover(mouse_pos if is_active else (-1, -1)) # Update hover only if active
-                card.draw_to_surface(self.screen) # Let the card draw itself
+                card.update_hover(mouse_pos if is_active else (-1, -1))
+                card.draw_to_surface(self.screen)
 
             pygame.display.flip()
             self.clock.tick(60)

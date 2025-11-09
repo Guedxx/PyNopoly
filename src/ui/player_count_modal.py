@@ -15,13 +15,13 @@ def create_text_button(text, width, height, font):
     return button_surface
 
 class PlayerCountModal(Modal):
-    def __init__(self, x, y, modal_image, screen, clock):
+    def __init__(self, x, y, modal_image, screen, clock, background_surface):
         # Cover the original text on the background image before initializing the modal
         cover_rect = pygame.Rect(40, 20, 720, 65)
         pink_color = (252, 156, 222) # A pink color sampled from the image
         pygame.draw.rect(modal_image, pink_color, cover_rect)
 
-        super().__init__(x, y, modal_image, screen, clock)
+        super().__init__(x, y, modal_image, screen, clock, background_surface)
         self.player_count = None
         
         font = pygame.font.Font(None, 48)
@@ -51,7 +51,6 @@ class PlayerCountModal(Modal):
         showing = True
         self.player_count = None # Reset before showing
         while showing:
-            background_surface = self.screen.copy()
             mouse_pos = pygame.mouse.get_pos()
 
             for event in pygame.event.get():
@@ -69,7 +68,7 @@ class PlayerCountModal(Modal):
                     break
             
             # Drawing
-            self.screen.blit(background_surface, (0, 0))
+            self.screen.blit(self.background_surface, (0, 0))
             self.screen.blit(self.modal_image, self.modal_rect)
             self.screen.blit(self.title_surf, self.title_rect)
 
