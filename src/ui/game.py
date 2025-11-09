@@ -23,8 +23,15 @@ class Game:
         
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         self.background = pygame.image.load(os.path.join(assets_dir, 'gamebg.png')).convert()
-        self.tabuleiro_img = pygame.image.load(os.path.join(assets_dir, 'tabuleirobase.png')).convert_alpha()
         
+        # Load, scale, and center the board
+        original_board_img = pygame.image.load(os.path.join(assets_dir, 'tab.png')).convert_alpha()
+        original_board_size = original_board_img.get_size()
+        board_scale = 1.21
+        scaled_size = (int(original_board_size[0] * board_scale), int(original_board_size[1] * board_scale))
+        self.tabuleiro_img = pygame.transform.smoothscale(original_board_img, scaled_size)
+        self.tabuleiro_rect = self.tabuleiro_img.get_rect(center=(self.width // 2, self.height // 2))
+
         self.running = True
         self.valor_dado1 = 0
         self.valor_dado2 = 0
@@ -37,17 +44,11 @@ class Game:
         self.jogadores = self.partida.jogadores
 
         # --- Asset Loading ---
-        # Map full character names to asset filenames
         character_asset_map = {
-            "hellokitty": "kitty",
-            "keroppi": "keropi",
-            "kuromi": "kuromi",
-            "mymelody": "melody",
-            "pompompurin": "pompom",
-            "cinnamoroll": "cinnamon"
+            "hellokitty": "kitty", "keroppi": "keropi", "kuromi": "kuromi",
+            "mymelody": "melody", "pompompurin": "pompom", "cinnamoroll": "cinnamon"
         }
 
-        # Load character pawns (board pieces)
         board_pieces_dir = os.path.join(assets_dir, 'board_pieces')
         self.character_icons = {}
         for name, asset_name in character_asset_map.items():
@@ -58,7 +59,6 @@ class Game:
                 print(f"Aviso: Imagem da peça do personagem '{name}' não encontrada.")
         self.character_icons["default"] = pygame.image.load(os.path.join(assets_dir, 'icone-gato.png')).convert_alpha()
 
-        # Load player cards (for corners)
         cards_dir = os.path.join(assets_dir, 'banners')
         self.player_cards = {}
         for jogador in self.jogadores:
@@ -72,22 +72,16 @@ class Game:
         
         # Pre-load and scale modal images
         unscaled_buy_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-comprar-propriedade.png')).convert_alpha()
-        original_width = unscaled_buy_modal_image.get_width()
-        original_height = unscaled_buy_modal_image.get_height()
-        scaled_width = int(original_width * 1.3)
-        scaled_height = int(original_height * 1.3)
+        original_width, original_height = unscaled_buy_modal_image.get_size()
+        scaled_width, scaled_height = int(original_width * 1.3), int(original_height * 1.3)
         self.buy_property_modal_image = pygame.transform.smoothscale(unscaled_buy_modal_image, (scaled_width, scaled_height))
-        self.buy_property_modal_width = self.buy_property_modal_image.get_width()
-        self.buy_property_modal_height = self.buy_property_modal_image.get_height()
+        self.buy_property_modal_width, self.buy_property_modal_height = self.buy_property_modal_image.get_size()
 
         unscaled_tax_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-taxa-riqueza.png')).convert_alpha()
-        original_tax_width = unscaled_tax_modal_image.get_width()
-        original_tax_height = unscaled_tax_modal_image.get_height()
-        scaled_tax_width = int(original_tax_width * 1.3)
-        scaled_tax_height = int(original_tax_height * 1.3)
+        original_tax_width, original_tax_height = unscaled_tax_modal_image.get_size()
+        scaled_tax_width, scaled_tax_height = int(original_tax_width * 1.3), int(original_tax_height * 1.3)
         self.tax_modal_image = pygame.transform.smoothscale(unscaled_tax_modal_image, (scaled_tax_width, scaled_tax_height))
-        self.tax_modal_width = self.tax_modal_image.get_width()
-        self.tax_modal_height = self.tax_modal_image.get_height()
+        self.tax_modal_width, self.tax_modal_height = self.tax_modal_image.get_size()
 
         self.dice_display_image = pygame.image.load(os.path.join(assets_dir, 'mostrador-dados.png')).convert_alpha()
         roll_dice_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-rodar-dados.png')).convert_alpha()
@@ -95,19 +89,16 @@ class Game:
 
         # Board positions and animation
         self.casas_x_y = {
-            0: (350, 310), 1: (390, 350), 2: (420, 380), 3: (445, 405), 
-            4: (465, 430), 5: (490, 450), 6: (520, 480), 7: (540, 500), 
-            8: (560, 520), 9: (590, 550), 10: (630, 590), 11: (658,542),
-            12: (695, 520), 13: (719,500), 14: (748,478), 15:(777,446),
-            16: (795, 422), 17: (817, 402), 18: (848,376), 19: (873,346), 
-            20: (913,316), 21: (873,279), 22: (852,254), 23: (823,225), 
-            24: (800,200), 25: (766,178), 26: (745,156), 27: (725,128),
-            28: (698,102), 29:(670,76), 30: (633,40), 31: (591,74),
-            32: (571,96), 33:(544,125), 34:(524,147), 35: (496,172),
-            36: (475,194), 37:(446,218), 38:(418,248), 39:(398,272)
+            0: (370, 595), 1: (426, 616), 2: (474, 616), 3: (522, 617), 4: (570, 617), 5: (618, 618), 6: (666, 618), 7: (714, 619), 8: (762, 619), 9: (810, 620), 
+            10: (890, 613), 11: (893, 528), 12: (893, 481), 13: (893, 434), 14: (893, 388), 15: (893, 341), 16: (893, 294), 17: (893, 248), 18: (893, 201), 19: (893, 155), 
+            20: (884, 112), 21: (866, 108), 22: (818, 108), 23: (771, 108), 24: (723, 108), 25: (676, 108), 26: (628, 108), 27: (581, 108), 28: (533, 108), 29: (486, 109), 
+            30: (385, 103), 31: (390, 145), 32: (390, 193), 33: (390, 242), 34: (390, 291), 35: (390, 340), 36: (390, 388), 37: (390, 437), 38: (390, 486), 39: (390, 535)
         }
         self.num_casas = len(self.casas_x_y)
-        self.animacao = AnimacaoMovimento(self.casas_x_y, self.num_casas)
+        self.animacao = AnimacaoMovimento(
+            self.casas_x_y, 
+            self.num_casas
+        )
 
     def get_draw_pos(self, jogador: Jogador, pos_interpolada=None):
         if pos_interpolada:
@@ -117,7 +108,13 @@ class Game:
         
         try:
             jogador_idx = self.jogadores.index(jogador)
-            offset = (jogador_idx * 18, 0)
+            if jogador.posicao == 0:
+                # Custom offset for start position to spread players out
+                offsets = [(-10, -10), (10, -10), (-10, 10), (10, 10)]
+                offset = offsets[jogador_idx % len(offsets)]
+            else:
+                # Original offset for other positions
+                offset = (jogador_idx * 18, 0)
             return (base[0] + offset[0], base[1] + offset[1])
         except ValueError:
             return base
@@ -136,6 +133,9 @@ class Game:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     self.running = False
+                    pygame.quit()
+                    sys.exit()
+
                 elif event.type == KEYDOWN:
                     if event.key == K_SPACE:
                         self.trigger_roll_dice()
@@ -174,7 +174,7 @@ class Game:
                         text_pos = (rect.left + 150, rect.top + 30)
                         self.screen.blit(money_surface, text_pos)
 
-            self.screen.blit(self.tabuleiro_img, (328, 0))
+            self.screen.blit(self.tabuleiro_img, self.tabuleiro_rect)
             
             for i, jogador in enumerate(self.jogadores):
                 is_animating = self.animacao.ativa and i == self.animacao.jogador_idx
