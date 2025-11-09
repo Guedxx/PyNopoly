@@ -128,25 +128,25 @@ class Game:
             result = self.partida.iniciar_turno()
             self.handle_engine_result(result)
 
-    def verificar_casa_cofre_ou_sorte(self, jogador):
-        """Verifica se o jogador está em uma casa de Cofre ou Sorte e retorna a carta"""
-        casa = self.partida.tabuleiro.get_casa_na_posicao(jogador.posicao)
-        if casa is None:
-            return None
+    # def verificar_casa_cofre_ou_sorte(self, jogador):
+    #     """Verifica se o jogador está em uma casa de Cofre ou Sorte e retorna a carta"""
+    #     casa = self.partida.tabuleiro.get_casa_na_posicao(jogador.posicao)
+    #     if casa is None:
+    #         return None
         
-        # Verifica o nome da classe da casa
-        nome_classe = casa.__class__.__name__
+    #     # Verifica o nome da classe da casa
+    #     nome_classe = casa.__class__.__name__
         
-        if nome_classe == 'CasaCofre':
-            # Pega uma carta do baralho de cofre
-            carta = self.partida.baralho_cofre.tirar_carta()
-            return {'carta': carta, 'baralho': self.partida.baralho_cofre}
-        elif nome_classe == 'CasaSorte':
-            # Pega uma carta do baralho de sorte
-            carta = self.partida.baralho_sorte.tirar_carta()
-            return {'carta': carta, 'baralho': self.partida.baralho_sorte}
+    #     if nome_classe == 'CasaCofre':
+    #         # Pega uma carta do baralho de cofre
+    #         carta = self.partida.baralho_cofre.tirar_carta()
+    #         return {'carta': carta, 'baralho': self.partida.baralho_cofre}
+    #     elif nome_classe == 'CasaSorte':
+    #         # Pega uma carta do baralho de sorte
+    #         carta = self.partida.baralho_sorte.tirar_carta()
+    #         return {'carta': carta, 'baralho': self.partida.baralho_sorte}
         
-        return None
+    #     return None
 
     def run(self):
         while self.running:
