@@ -12,12 +12,16 @@ class BuyPropertyModal(Modal):
         self.imovel = imovel
         self.decision = None # True for buy, False for not buy
 
+
+        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
+        fonte = os.path.join(assets_dir, 'fonte')
+        fonte_path = os.path.join(fonte, 'LilitaOne-Regular.ttf')
+
         # Fonts
-        self.title_font = pygame.font.Font(None, 30)
-        self.price_font = pygame.font.Font(None, 30)
+        self.title_font = pygame.font.Font(fonte_path, 24)
+        self.price_font = pygame.font.Font(fonte_path, 24)
 
         # Buttons
-        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         sim_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-sim.png')).convert_alpha()
         nao_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-nao.png')).convert_alpha()
         self.new_property_image = pygame.image.load(os.path.join(assets_dir, 'buy_property.png')).convert_alpha()
@@ -39,12 +43,12 @@ class BuyPropertyModal(Modal):
         # Adjust positions for the larger, scaled modal
         # Title (Property Name)
         self.title_surf = self.title_font.render(self.imovel.nome, True, (255, 255, 255))
-        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 60))
+        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 55))
         
         # Price
         price_text = f"{self.imovel.preco}"
         self.price_surf = self.price_font.render(price_text, True, (255, 255, 255))
-        self.price_rect = self.price_surf.get_rect(center=(self.modal_rect.centerx + 37, self.modal_rect.y + 123))
+        self.price_rect = self.price_surf.get_rect(center=(self.modal_rect.centerx + 17, self.modal_rect.y + 123))
 
         # Buttons
         btn_y = self.modal_rect.y + 200

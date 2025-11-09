@@ -19,6 +19,21 @@ class TaxModal(Modal):
         # Button
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         ok_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-ok.png')).convert_alpha()
+        self.new_taxmodal_image = pygame.image.load(os.path.join(assets_dir, 'tax_modal.png')).convert_alpha()
+
+        # Redimensiona a carta
+        orig_w, orig_h = self.new_taxmodal_image.get_size()
+        new_w = int(orig_w)
+        new_h = int(orig_h)
+        if new_w <= 0: new_w = 1
+        if new_h <= 0: new_h = 1
+        self.new_taxmodal_image = pygame.transform.smoothscale(self.new_taxmodal_image, (new_w, new_h))
+        
+        # Centraliza na tela
+        screen_w, screen_h = screen.get_size()
+        self.carta_x = (screen_w - new_w) // 2
+        self.carta_y = (screen_h - new_h) // 2
+
 
         # OK Button
         btn_y = self.modal_rect.y + 200
@@ -52,7 +67,7 @@ class TaxModal(Modal):
                     break
             
             self.screen.blit(background_capture, (0, 0))
-            self.screen.blit(self.modal_image, self.modal_rect)
+            self.screen.blit(self.new_taxmodal_image, (self.carta_x, self.carta_y))
             # Removed text blitting as image contains text
 
             for button in self.buttons:
