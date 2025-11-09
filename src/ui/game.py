@@ -12,6 +12,8 @@ from src.engine.Fabricas import TabuleiroPadraoFactory
 from src.ui.buy_property_modal import BuyPropertyModal
 from src.ui.tax_modal import TaxModal
 from src.ui.pay_rent_modal import PayRentModal
+from src.ui.auction_modal import AuctionModal
+from src.ui.auction_result_modal import AuctionResultModal
 from src.ui.button import Button
 from src.ui.mostrar_cartas import mostrar_carta
 
@@ -90,6 +92,18 @@ class Game:
         scaled_pay_rent_width, scaled_pay_rent_height = int(original_pay_rent_width * 1.3), int(original_pay_rent_height * 1.3)
         self.pay_rent_modal_image = pygame.transform.smoothscale(unscaled_pay_rent_modal_image, (scaled_pay_rent_width, scaled_pay_rent_height))
         self.pay_rent_modal_width, self.pay_rent_modal_height = self.pay_rent_modal_image.get_size()
+
+        unscaled_auction_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-leilao.png')).convert_alpha()
+        original_auction_width, original_auction_height = unscaled_auction_modal_image.get_size()
+        scaled_auction_width, scaled_auction_height = int(original_auction_width * 1.3), int(original_auction_height * 1.3)
+        self.auction_modal_image = pygame.transform.smoothscale(unscaled_auction_modal_image, (scaled_auction_width, scaled_auction_height))
+        self.auction_modal_width, self.auction_modal_height = self.auction_modal_image.get_size()
+
+        unscaled_auction_result_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-fim-leilao.png')).convert_alpha()
+        original_auction_result_width, original_auction_result_height = unscaled_auction_result_modal_image.get_size()
+        scaled_auction_result_width, scaled_auction_result_height = int(original_auction_result_width * 1.3), int(original_auction_result_height * 1.3)
+        self.auction_result_modal_image = pygame.transform.smoothscale(unscaled_auction_result_modal_image, (scaled_auction_result_width, scaled_auction_result_height))
+        self.auction_result_modal_width, self.auction_result_modal_height = self.auction_result_modal_image.get_size()
 
         self.dice_display_image = pygame.image.load(os.path.join(assets_dir, 'mostrador-dados.png')).convert_alpha()
         roll_dice_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-rodar-dados.png')).convert_alpha()
@@ -228,9 +242,12 @@ class Game:
             modal_y = (self.height - self.buy_property_modal_height) // 2
             modal = BuyPropertyModal(modal_x, modal_y, self.buy_property_modal_image, self.screen, self.clock, result["imovel"])
             decision = modal.show()
-            self.partida.resolver_compra(decision)
-            result = self.partida.finalizar_turno(self.last_roll_was_double)
-            self.handle_engine_result(result)
+            result = self.partida.resolver_compra(decision)
+            if result:
+                self.handle_engine_result(result)
+            else:
+                result = self.partida.finalizar_turno(self.last_roll_was_double)
+                self.handle_engine_result(result)
 
         elif acao == "pagar_imposto":
             modal_x = (self.width - self.tax_modal_width) // 2
@@ -247,6 +264,22 @@ class Game:
             modal = PayRentModal(modal_x, modal_y, self.pay_rent_modal_image, self.screen, self.clock, result["imovel"])
             modal.show()
             # The rent payment is already handled by the engine in Imovel.executar_acao
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+
+        elif acao == "iniciar_leilao":
+            modal_x = (self.width - self.auction_modal_width) // 2
+            modal_y = (self.height - self.auction_modal_height) // 2
+            modal = AuctionModal(modal_x, modal_y, self.auction_modal_image, self.screen, self.clock, result["imovel"], result["jogadores"], self.partida)
+            vencedor, lance = modal.show()
+
+            if vencedor:
+                result_modal_x = (self.width - self.auction_result_modal_width) // 2
+                result_modal_y = (self.height - self.auction_result_modal_height) // 2
+                result_modal = AuctionResultModal(result_modal_x, result_modal_y, self.auction_result_modal_image, self.screen, self.clock, result["imovel"], vencedor, lance)
+                result_modal.show()
+                vencedor.comprar_imovel_leilao(result["imovel"], lance)
+
             result = self.partida.finalizar_turno(self.last_roll_was_double)
             self.handle_engine_result(result)
 

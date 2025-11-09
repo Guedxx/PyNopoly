@@ -31,6 +31,12 @@ class Partida:
         self.em_andamento: bool = False
         self.dados_rolados_neste_turno: bool = False
 
+        self.leilao_em_andamento: bool = False
+        self.jogadores_leilao: List[Jogador] = []
+        self.maior_lance: int = 0
+        self.jogador_maior_lance: Optional[Jogador] = None
+        self.leilao_jogador_atual_idx: int = 0
+
     def iniciar_jogo(self):
         if not self.jogadores:
             print("Não há jogadores suficientes para iniciar a partida.")
@@ -156,8 +162,7 @@ class Partida:
             jogador.comprar_imovel(casa_atual)
             print(f"{jogador.nome} comprou {casa_atual.nome}.")
         else:
-            # TODO: Iniciar leilão
-            print(f"{jogador.nome} recusou a compra de {casa_atual.nome}. Leilão deveria começar.")
+            return self.iniciar_leilao()
 
     def resolver_pagamento_imposto(self):
         jogador = self.jogadores[self.jogador_atual_idx]
@@ -168,6 +173,30 @@ class Partida:
         
         jogador.enviar_dinheiro(casa_atual.valor_imposto)
         print(f"{jogador.nome} pagou ${casa_atual.valor_imposto} de imposto.")
+
+    def iniciar_leilao(self):
+        casa_atual = self.tabuleiro.get_casa_na_posicao(self.jogadores[self.jogador_atual_idx].posicao)
+        self.leilao_em_andamento = True
+        self.jogadores_leilao = self.jogadores[:] # Copy of players for the auction
+        self.maior_lance = 0
+        self.jogador_maior_lance = None
+        self.leilao_jogador_atual_idx = self.jogador_atual_idx
+
+        return {
+            "acao": "iniciar_leilao",
+            "imovel": casa_atual,
+            "jogadores": self.jogadores_leilao
+        }
+
+    def dar_lance(self, jogador, valor):
+        if valor > self.maior_lance and valor <= jogador.dinheiro:
+            self.maior_lance = valor
+            self.jogador_maior_lance = jogador
+
+    def desistir_leilao(self, jogador):
+        if jogador in self.jogadores_leilao:
+            self.jogadores_leilao.remove(jogador)
+
 
 
     def finalizar_turno(self, is_double: bool):
