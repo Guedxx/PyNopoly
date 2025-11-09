@@ -24,12 +24,12 @@ class SelectCharacterModal(Modal):
         }
 
         characters_data = [
-            ("hellokitty", 465, 264),
-            ("kuromi", 601, 264),
-            ("cinnamoroll", 737, 264),
-            ("mymelody", 465, 428),
-            ("pompompurin", 601, 428),
-            ("keroppi", 737, 428),
+            ("hellokitty", 425, 264),
+            ("kuromi", 561, 264),
+            ("cinnamoroll", 697, 264),
+            ("mymelody", 425, 413),
+            ("pompompurin", 561, 413),
+            ("keroppi", 697, 413),
         ]
 
         for name, x, y in characters_data:

@@ -6,7 +6,7 @@ from .button import Button
 def create_text_button(text, width, height, font):
     """Helper function to create a button surface with text."""
     button_surface = pygame.Surface((width, height))
-    button_surface.fill((70, 70, 180))  # A simple blueish color
+    button_surface.fill((255, 170, 216))  # A simple rose color
     pygame.draw.rect(button_surface, (255, 255, 255), button_surface.get_rect(), 2) # White border
 
     text_surf = font.render(text, True, (255, 255, 255))
@@ -18,8 +18,9 @@ class PlayerCountModal(Modal):
     def __init__(self, x, y, modal_image, screen, clock, background_surface):
         # Cover the original text on the background image before initializing the modal
         cover_rect = pygame.Rect(40, 20, 720, 65)
-        pink_color = (252, 156, 222) # A pink color sampled from the image
-        pygame.draw.rect(modal_image, pink_color, cover_rect)
+        purple_color = (198, 141, 255) # A purple sampled from the image
+        pygame.draw.rect(modal_image, purple_color, cover_rect)
+
 
         super().__init__(x, y, modal_image, screen, clock, background_surface)
         self.player_count = None
@@ -28,8 +29,8 @@ class PlayerCountModal(Modal):
         title_font = pygame.font.Font(None, 36)
 
         self.title_surf = title_font.render("Selecione o número de jogadores:", True, (255, 255, 255))
-        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 50))
-
+        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 60))
+        
         # Create buttons
         btn_w, btn_h = 80, 60
         btn_y = self.modal_rect.centery
