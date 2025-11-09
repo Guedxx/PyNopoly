@@ -7,6 +7,8 @@ from .Banco import Banco
 from .Cartas import Baralho, gerar_baralho
 from .Imovel import Imovel
 from .Imposto import Imposto
+from .Tabuleiro.CasaCofre import CasaCofre
+from .Tabuleiro.CasaSorte import CasaSorte
 
 if TYPE_CHECKING:
     from .Tabuleiro.Tabuleiro import Tabuleiro
@@ -91,6 +93,8 @@ class Partida:
         jogador_da_vez = self.jogadores[self.jogador_atual_idx]
         casa_atual = self.tabuleiro.get_casa_na_posicao(jogador_da_vez.posicao)
 
+        result = {"acao": "turno_finalizado"} # Default action
+
         if casa_atual:
             if isinstance(casa_atual, Imovel) and casa_atual.dono is None:
                 if jogador_da_vez.dinheiro >= casa_atual.preco:
@@ -109,17 +113,37 @@ class Partida:
                     "jogador": jogador_da_vez,
                     "imposto": casa_atual
                 }
-
-            casa_atual.executar_acao(jogador_da_vez, 0, self.jogadores, self.baralho_sorte, self.baralho_cofre)
             
+            # Execute action for the current space
+            carta_tirada = None
+            # Import CasaCofre and CasaSorte to check instance type
+            from .Tabuleiro.CasaCofre import CasaCofre
+            from .Tabuleiro.CasaSorte import CasaSorte
+
+            if isinstance(casa_atual, (CasaCofre, CasaSorte)):
+                carta_tirada = casa_atual.executar_acao(jogador_da_vez, 0, self.jogadores, self.baralho_sorte, self.baralho_cofre)
+                if carta_tirada:
+                    result["acao"] = "carta_tirada"
+                    result["carta"] = carta_tirada
+            else:
+                casa_atual.executar_acao(jogador_da_vez, 0, self.jogadores, self.baralho_sorte, self.baralho_cofre)
+                if isinstance(casa_atual, Imovel) and casa_atual.dono is not None and casa_atual.dono is not jogador_da_vez:
+                    result["acao"] = "pagar_aluguel"
+                    result["imovel"] = casa_atual
+
             posicao_final = jogador_da_vez.posicao
             if posicao_final != casa_atual.pos:
-                return {
-                    "acao": "movido_por_carta",
-                    "path": [posicao_final]
-                }
-
-        return {"acao": "turno_finalizado"}
+                result["acao"] = "movido_por_carta"
+                result["path"] = [posicao_final]
+                result["posicao_inicial_carta"] = casa_atual.pos # Add this line
+                # If a card was drawn AND it caused movement, we need to ensure both are communicated
+                if carta_tirada:
+                    result["acao"] = "carta_tirada_e_movido" # New action type
+                    result["carta"] = carta_tirada
+                    result["path"] = [posicao_final]
+                    result["posicao_inicial_carta"] = casa_atual.pos # Add this line
+                
+        return result
 
     def resolver_compra(self, decision: bool):
         jogador = self.jogadores[self.jogador_atual_idx]

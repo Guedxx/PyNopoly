@@ -11,7 +11,9 @@ from src.engine.Partida import Partida
 from src.engine.Fabricas import TabuleiroPadraoFactory
 from src.ui.buy_property_modal import BuyPropertyModal
 from src.ui.tax_modal import TaxModal
+from src.ui.pay_rent_modal import PayRentModal
 from src.ui.button import Button
+from src.ui.mostrar_cartas import mostrar_carta
 
 class Game:
     def __init__(self, selected_characters, screen):
@@ -83,6 +85,12 @@ class Game:
         self.tax_modal_image = pygame.transform.smoothscale(unscaled_tax_modal_image, (scaled_tax_width, scaled_tax_height))
         self.tax_modal_width, self.tax_modal_height = self.tax_modal_image.get_size()
 
+        unscaled_pay_rent_modal_image = pygame.image.load(os.path.join(assets_dir, 'alert-taxa-propriedade.png')).convert_alpha()
+        original_pay_rent_width, original_pay_rent_height = unscaled_pay_rent_modal_image.get_size()
+        scaled_pay_rent_width, scaled_pay_rent_height = int(original_pay_rent_width * 1.3), int(original_pay_rent_height * 1.3)
+        self.pay_rent_modal_image = pygame.transform.smoothscale(unscaled_pay_rent_modal_image, (scaled_pay_rent_width, scaled_pay_rent_height))
+        self.pay_rent_modal_width, self.pay_rent_modal_height = self.pay_rent_modal_image.get_size()
+
         self.dice_display_image = pygame.image.load(os.path.join(assets_dir, 'mostrador-dados.png')).convert_alpha()
         roll_dice_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-rodar-dados.png')).convert_alpha()
         self.roll_dice_button = Button(1090, 530, roll_dice_button_img, self.trigger_roll_dice)
@@ -125,25 +133,7 @@ class Game:
             result = self.partida.iniciar_turno()
             self.handle_engine_result(result)
 
-    # def verificar_casa_cofre_ou_sorte(self, jogador):
-    #     """Verifica se o jogador está em uma casa de Cofre ou Sorte e retorna a carta"""
-    #     casa = self.partida.tabuleiro.get_casa_na_posicao(jogador.posicao)
-    #     if casa is None:
-    #         return None
-        
-    #     # Verifica o nome da classe da casa
-    #     nome_classe = casa.__class__.__name__
-        
-    #     if nome_classe == 'CasaCofre':
-    #         # Pega uma carta do baralho de cofre
-    #         carta = self.partida.baralho_cofre.tirar_carta()
-    #         return {'carta': carta, 'baralho': self.partida.baralho_cofre}
-    #     elif nome_classe == 'CasaSorte':
-    #         # Pega uma carta do baralho de sorte
-    #         carta = self.partida.baralho_sorte.tirar_carta()
-    #         return {'carta': carta, 'baralho': self.partida.baralho_sorte}
-        
-    #     return None
+
 
     def run(self):
         while self.running:
@@ -251,14 +241,42 @@ class Game:
             result = self.partida.finalizar_turno(self.last_roll_was_double)
             self.handle_engine_result(result)
 
+        elif acao == "pagar_aluguel":
+            modal_x = (self.width - self.pay_rent_modal_width) // 2
+            modal_y = (self.height - self.pay_rent_modal_height) // 2
+            modal = PayRentModal(modal_x, modal_y, self.pay_rent_modal_image, self.screen, self.clock, result["imovel"])
+            modal.show()
+            # The rent payment is already handled by the engine in Imovel.executar_acao
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+
         elif acao == "turno_finalizado":
             result = self.partida.finalizar_turno(self.last_roll_was_double)
             self.handle_engine_result(result)
         
+        elif acao == "carta_tirada":
+            jogador_atual = self.partida.jogadores[self.partida.jogador_atual_idx]
+            mostrar_carta(result["carta"], self.screen, self.clock, jogador_atual, self.jogadores)
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
+
+        elif acao == "carta_tirada_e_movido":
+            jogador_atual = self.partida.jogadores[self.partida.jogador_atual_idx]
+            mostrar_carta(result["carta"], self.screen, self.clock, jogador_atual, self.jogadores)
+            try:
+                jogador_idx = self.jogadores.index(self.partida.jogadores[self.partida.jogador_atual_idx])
+                pos_anterior = result["posicao_inicial_carta"]
+                self.animacao.iniciar(jogador_idx, result["path"], pos_anterior)
+                if self.animacao.tem_passos_pendentes():
+                    self.animacao.proximo_passo()
+                self.game_state = "ANIMATING"
+            except ValueError:
+                self.game_state = "AWAITING_ROLL"
+        
         elif acao == "movido_por_carta":
             try:
                 jogador_idx = self.jogadores.index(self.partida.jogadores[self.partida.jogador_atual_idx])
-                pos_anterior = self.partida.jogadores[jogador_idx].posicao
+                pos_anterior = result["posicao_inicial_carta"]
                 self.animacao.iniciar(jogador_idx, result["path"], pos_anterior)
                 if self.animacao.tem_passos_pendentes():
                     self.animacao.proximo_passo()

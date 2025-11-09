@@ -13,4 +13,5 @@ class CasaCofre(CasaTabuleiro):
             carta = baralho_cofre.tirar_carta()
             carta.executar_acao(jogador, jogadores)
             baralho_cofre.devolver_carta(carta)
+            return carta
 

@@ -13,3 +13,4 @@ class CasaSorte(CasaTabuleiro):
             carta = baralho_sorte.tirar_carta()
             carta.executar_acao(jogador, jogadores)
             baralho_sorte.devolver_carta(carta)
+            return carta
