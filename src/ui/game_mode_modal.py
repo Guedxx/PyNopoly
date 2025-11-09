@@ -20,11 +20,11 @@ class GameModeModal(Modal):
         btn_y = self.modal_rect.y + 150
         button_spacing = 40
         total_buttons_width = pvp_button_img.get_width() + ias_button_img.get_width() + button_spacing
-        start_x = self.modal_rect.centerx - (total_buttons_width // 2)
+        start_x = self.modal_rect.centerx - (total_buttons_width // 2) - 20
 
-        self.pvp_button = Button(start_x, btn_y, pvp_button_img, lambda: self.set_mode("pvp"))
+        self.pvp_button = Button(start_x+25, btn_y, pvp_button_img, lambda: self.set_mode("pvp"))
         # The AI button does nothing for now
-        self.ias_button = Button(start_x + pvp_button_img.get_width() + button_spacing, btn_y, ias_button_img, lambda: None)
+        self.ias_button = Button((start_x) + pvp_button_img.get_width() + button_spacing, btn_y, ias_button_img, lambda: None)
         
         self.buttons = [self.pvp_button, self.ias_button]
 
