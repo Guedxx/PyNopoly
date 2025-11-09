@@ -24,10 +24,10 @@ class SelectCharacterModal(Modal):
         }
 
         characters_data = [
-            ("hellokitty", 425, 264),
+            ("mymelody", 425, 264),
             ("kuromi", 561, 264),
-            ("cinnamoroll", 697, 264),
-            ("mymelody", 425, 413),
+            ("hellokitty", 697, 264),
+            ("cinnamoroll", 425, 413),
             ("pompompurin", 561, 413),
             ("keroppi", 697, 413),
         ]
@@ -78,9 +78,8 @@ class SelectCharacterModal(Modal):
             self.screen.blit(self.background_surface, (0, 0))
             self.screen.blit(self.modal_image, self.modal_rect)
 
-            for char_name, card in self.character_cards.items():
-                is_active = char_name in active_cards
-                card.update_hover(mouse_pos if is_active else (-1, -1))
+            for card in active_cards.values():
+                card.update_hover(mouse_pos)
                 card.draw_to_surface(self.screen)
 
             pygame.display.flip()
