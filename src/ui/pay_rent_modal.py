@@ -23,7 +23,7 @@ class PayRentModal(Modal):
         # Buttons
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         ok_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-ok.png')).convert_alpha()
-        self.new_rent_image = pygame.image.load(os.path.join(assets_dir, 'pay_rent.png')).convert_alpha()
+        self.new_rent_image = pygame.image.load(os.path.join(assets_dir, 'alert-taxa-propriedade.png')).convert_alpha()
         CARD_SCALE = 1  # Escala da carta
 
         # Redimensiona a carta

@@ -6,6 +6,7 @@ from .Leilao import Leilao
 if TYPE_CHECKING:
     from .Jogador import Jogador
     from .Tabuleiro.Terreno import Terreno
+from .Imovel import Imovel
 
 class Banco:
     def __init__(self):
@@ -30,10 +31,25 @@ class Banco:
     def hipotecar_imovel(self, imovel: Terreno, jogador: Jogador):
         """
         Empresta dinheiro ao jogador com base no valor de hipoteca do imóvel.
+        Vende todas as casas do imóvel pela metade do preço antes de hipotecar.
         """
-        jogador.receber_dinheiro(imovel.preco)
+        if isinstance(imovel, Imovel) and imovel.casas > 0:
+            casas_vendidas = imovel.casas
+            valor_venda_casas = int((casas_vendidas * imovel.preco_casa) / 2)
+            jogador.receber_dinheiro(valor_venda_casas)
+            
+            if casas_vendidas == 5: # Hotel
+                self._hoteis_disponiveis += 1
+            else:
+                self._casas_disponiveis += casas_vendidas
+            
+            imovel.casas = 0
+            print(f"{jogador.peca} vendeu {casas_vendidas} casas em {imovel.nome} por ${valor_venda_casas}.")
+
+        jogador.receber_dinheiro(imovel.hipoteca)
         imovel.set_hipotecado(True)
-        # To-do: adicionar verificação se o imóvel tem construções e recalcular o preço da hipoteca se tiver
+        print(f"{jogador.peca} hipotecou {imovel.nome} por ${imovel.hipoteca}.")
+
 
     def resgatar_hipoteca(self, imovel: Terreno, jogador: Jogador):
         """
@@ -41,8 +57,10 @@ class Banco:
         depois disso o imóvel não está mais hipotecado.
         A regra é o valor da hipoteca + 10% de juros.
         """
-        jogador.enviar_dinheiro(imovel.preco * 1.1)
+        custo_resgate = int(imovel.hipoteca * 1.1)
+        jogador.enviar_dinheiro(custo_resgate)
         imovel.set_hipotecado(False)
+        print(f"{jogador.peca} resgatou {imovel.nome} por ${custo_resgate}.")
 
     def iniciar_leilao(self, imovel: Terreno, jogadores: List[Jogador]):
         """

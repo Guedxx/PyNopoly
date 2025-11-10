@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING, Optional
+from ..Imovel import Imovel
 
 if TYPE_CHECKING:
     from .CasaTabuleiro import CasaTabuleiro
     from ..Jogador import Jogador
-    from ..Imovel import Imovel
 
 class Tabuleiro:
     def __init__(self, casas: List[CasaTabuleiro]):

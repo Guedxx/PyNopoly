@@ -14,8 +14,10 @@ from src.ui.tax_modal import TaxModal
 from src.ui.pay_rent_modal import PayRentModal
 from src.ui.auction_modal import AuctionModal
 from src.ui.auction_result_modal import AuctionResultModal
+from src.ui.build_house_modal import BuildHouseModal
 from src.ui.button import Button
 from src.ui.mostrar_cartas import mostrar_carta
+from src.ui.player_properties_screen import PlayerPropertiesScreen
 
 class Game:
     def __init__(self, selected_characters, screen):
@@ -23,6 +25,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.height = 720
         self.width = 1280
+        self.player_banner_buttons = []
 
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         fonte = os.path.join(assets_dir, 'fonte')
@@ -69,12 +72,26 @@ class Game:
 
         cards_dir = os.path.join(assets_dir, 'banners')
         self.player_cards = {}
-        for jogador in self.jogadores:
+        card_positions = [ (0, 0), (self.width, 0), (0, self.height), (self.width, self.height) ]
+        for i, jogador in enumerate(self.jogadores):
             asset_name = character_asset_map.get(jogador.nome)
             if asset_name:
                 try:
                     path = os.path.join(cards_dir, f'card-{asset_name}.png')
-                    self.player_cards[jogador.nome] = pygame.image.load(path).convert_alpha()
+                    card_surface = pygame.image.load(path).convert_alpha()
+                    self.player_cards[jogador.nome] = card_surface
+                    
+                    if i < 4:
+                        pos = card_positions[i]
+                        rect = card_surface.get_rect()
+                        if pos[0] > 0: rect.right = pos[0]
+                        else: rect.left = pos[0]
+                        if pos[1] > 0: rect.bottom = pos[1]
+                        else: rect.top = pos[1]
+                        
+                        button = Button(rect.x, rect.y, card_surface, lambda j=jogador: self.show_player_properties(j))
+                        self.player_banner_buttons.append(button)
+
                 except pygame.error:
                     print(f"Aviso: Imagem do card do jogador '{jogador.nome}' não encontrada.")
         
@@ -151,6 +168,10 @@ class Game:
             result = self.partida.iniciar_turno()
             self.handle_engine_result(result)
 
+    def show_player_properties(self, jogador):
+        properties_screen = PlayerPropertiesScreen(self.screen, self.clock, jogador)
+        properties_screen.run()
+
 
 
     def run(self):
@@ -167,6 +188,10 @@ class Game:
                 elif event.type == KEYDOWN:
                     if event.key == K_SPACE:
                         self.trigger_roll_dice()
+                
+                for button in self.player_banner_buttons:
+                    button.handle_event(event)
+                
                 self.roll_dice_button.handle_event(event)
 
             if self.game_state == "ANIMATING":
@@ -184,23 +209,18 @@ class Game:
 
             self.screen.blit(self.background, (0, 0))
             
-            card_positions = [ (0, 0), (self.width, 0), (0, self.height), (self.width, self.height) ]
-            for i, jogador in enumerate(self.jogadores):
-                if i < 4:
-                    card_surface = self.player_cards.get(jogador.nome)
-                    if card_surface:
-                        pos = card_positions[i]
-                        rect = card_surface.get_rect()
-                        if pos[0] > 0: rect.right = pos[0]
-                        else: rect.left = pos[0]
-                        if pos[1] > 0: rect.bottom = pos[1]
-                        else: rect.top = pos[1]
-                        self.screen.blit(card_surface, rect)
+            # Draw player banners
+            for i, button in enumerate(self.player_banner_buttons):
+                button.update_hover(mouse_pos)
+                button.draw_to_surface(self.screen)
+                
+                # Draw money on top of the banner
+                jogador = self.jogadores[i]
+                money_text = f"{jogador.dinheiro}"
+                money_surface = self.font.render(money_text, True, (255, 255, 255))
+                text_pos = (button.rect.left + 140, button.rect.top + 30)
+                self.screen.blit(money_surface, text_pos)
 
-                        money_text = f"{jogador.dinheiro}"
-                        money_surface = self.font.render(money_text, True, (255, 255, 255))
-                        text_pos = (rect.left + 140, rect.top + 30)
-                        self.screen.blit(money_surface, text_pos)
 
             self.screen.blit(self.tabuleiro_img, self.tabuleiro_rect)
             
@@ -252,6 +272,13 @@ class Game:
             else:
                 result = self.partida.finalizar_turno(self.last_roll_was_double)
                 self.handle_engine_result(result)
+
+        elif acao == "proposta_construir_casa":
+            modal = BuildHouseModal(self.screen, self.clock, result["imovel"])
+            decision = modal.show()
+            self.partida.resolver_construcao(decision)
+            result = self.partida.finalizar_turno(self.last_roll_was_double)
+            self.handle_engine_result(result)
 
         elif acao == "pagar_imposto":
             modal_x = (self.width - self.tax_modal_width) // 2

@@ -114,6 +114,14 @@ class Partida:
                     print(f"{jogador_da_vez.nome} não tem dinheiro para comprar. Leilão deveria começar.")
                     return self.iniciar_leilao()
             
+            elif isinstance(casa_atual, Imovel) and casa_atual.dono is jogador_da_vez:
+                if jogador_da_vez.tem_monopolio(casa_atual.cor, self.tabuleiro):
+                     return {
+                        "acao": "proposta_construir_casa",
+                        "jogador": jogador_da_vez,
+                        "imovel": casa_atual
+                    }
+
             elif isinstance(casa_atual, Imposto):
                 return {
                     "acao": "pagar_imposto",
@@ -164,6 +172,17 @@ class Partida:
             print(f"{jogador.nome} comprou {casa_atual.nome}.")
         else:
             return self.iniciar_leilao()
+
+    def resolver_construcao(self, decision: bool):
+        jogador = self.jogadores[self.jogador_atual_idx]
+        casa_atual = self.tabuleiro.get_casa_na_posicao(jogador.posicao)
+
+        if not isinstance(casa_atual, Imovel):
+            return
+
+        if decision:
+            jogador.construir_casa(casa_atual, self.tabuleiro)
+            print(f"{jogador.nome} construiu em {casa_atual.nome}.")
 
     def resolver_pagamento_imposto(self):
         jogador = self.jogadores[self.jogador_atual_idx]
