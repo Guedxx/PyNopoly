@@ -61,10 +61,8 @@ class AuctionModal(Modal):
             self.partida.dar_lance(jogador_atual, valor)
             self.input_text = ""
             
-            if len(self.partida.jogadores_leilao) > 1:
+            if self.partida.jogadores_leilao:
                 self.partida.leilao_jogador_atual_idx = (self.partida.leilao_jogador_atual_idx + 1) % len(self.partida.jogadores_leilao)
-            else:
-                self.should_close = True
 
         except (ValueError, IndexError):
             print("Invalid bid")
@@ -77,7 +75,7 @@ class AuctionModal(Modal):
         jogador_atual = self.partida.jogadores_leilao[self.partida.leilao_jogador_atual_idx]
         self.partida.desistir_leilao(jogador_atual)
         
-        if len(self.partida.jogadores_leilao) <= 1:
+        if not self.partida.jogadores_leilao:
             self.should_close = True
         elif self.partida.leilao_jogador_atual_idx >= len(self.partida.jogadores_leilao):
             self.partida.leilao_jogador_atual_idx = 0

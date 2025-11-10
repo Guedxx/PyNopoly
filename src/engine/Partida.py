@@ -9,6 +9,7 @@ from .Imovel import Imovel
 from .Imposto import Imposto
 from .Tabuleiro.CasaCofre import CasaCofre
 from .Tabuleiro.CasaSorte import CasaSorte
+from .Tabuleiro.Estacao import Estacao
 
 if TYPE_CHECKING:
     from .Tabuleiro.Tabuleiro import Tabuleiro
@@ -102,7 +103,7 @@ class Partida:
         result = {"acao": "turno_finalizado"} # Default action
 
         if casa_atual:
-            if isinstance(casa_atual, Imovel) and casa_atual.dono is None:
+            if isinstance(casa_atual, (Imovel, Estacao)) and casa_atual.dono is None:
                 if jogador_da_vez.dinheiro >= casa_atual.preco:
                     return {
                         "acao": "proposta_compra",
@@ -111,7 +112,7 @@ class Partida:
                     }
                 else:
                     print(f"{jogador_da_vez.nome} não tem dinheiro para comprar. Leilão deveria começar.")
-                    return {"acao": "turno_finalizado"}
+                    return self.iniciar_leilao()
             
             elif isinstance(casa_atual, Imposto):
                 return {
@@ -155,7 +156,7 @@ class Partida:
         jogador = self.jogadores[self.jogador_atual_idx]
         casa_atual = self.tabuleiro.get_casa_na_posicao(jogador.posicao)
 
-        if not isinstance(casa_atual, Imovel):
+        if not isinstance(casa_atual, (Imovel, Estacao)):
             return
 
         if decision:
@@ -178,7 +179,7 @@ class Partida:
         casa_atual = self.tabuleiro.get_casa_na_posicao(self.jogadores[self.jogador_atual_idx].posicao)
         self.leilao_em_andamento = True
         self.jogadores_leilao = self.jogadores[:] # Copy of players for the auction
-        self.maior_lance = 0
+        self.maior_lance = casa_atual.preco
         self.jogador_maior_lance = None
         self.leilao_jogador_atual_idx = self.jogador_atual_idx
 
