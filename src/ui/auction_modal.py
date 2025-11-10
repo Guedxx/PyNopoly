@@ -22,7 +22,6 @@ class AuctionModal(Modal):
         self.price_font = pygame.font.Font(fonte_path, 22)
 
         # Buttons
-        assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         lance_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-dar-lance.png')).convert_alpha()
         desistir_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-desistir.png')).convert_alpha()
 
@@ -43,12 +42,12 @@ class AuctionModal(Modal):
         self.carta_y = (screen_h - new_h) // 2
 
         # Input box
-        self.input_rect = pygame.Rect(self.modal_rect.centerx - 100, self.modal_rect.y + 200, 200, 40)
+        self.input_rect = pygame.Rect(self.modal_rect.centerx - 100, self.modal_rect.y + 230, 200, 40)
         self.input_text = ""
         self.input_active = False
 
         # Buttons
-        btn_y = self.modal_rect.y + 250
+        btn_y = self.modal_rect.y + 280
         self.lance_button = Button(self.modal_rect.centerx - lance_button_img.get_width() - 10, btn_y, lance_button_img, self.dar_lance)
         self.desistir_button = Button(self.modal_rect.centerx + 10, btn_y, desistir_button_img, self.desistir)
         
@@ -125,7 +124,7 @@ class AuctionModal(Modal):
             # Highest bid
             maior_lance_text = f"{self.partida.maior_lance}"
             maior_lance_surf = self.font.render(maior_lance_text, True, (255, 255, 255))
-            maior_lance_rect = maior_lance_surf.get_rect(center=(self.modal_rect.centerx+35, self.modal_rect.y + 98))
+            maior_lance_rect = maior_lance_surf.get_rect(center=(self.modal_rect.centerx+40, self.modal_rect.y + 98))
             self.screen.blit(maior_lance_surf, maior_lance_rect)
 
             # Bid author
@@ -143,7 +142,7 @@ class AuctionModal(Modal):
             jogador_atual = self.partida.jogadores_leilao[self.partida.leilao_jogador_atual_idx]
             jogador_text = f"{jogador_atual.nome}"
             jogador_surf = self.font.render(jogador_text, True, (255, 255, 255))
-            jogador_rect = jogador_surf.get_rect(center=(self.modal_rect.centerx+10, self.modal_rect.y + 143))
+            jogador_rect = jogador_surf.get_rect(center=(self.modal_rect.centerx+10, self.modal_rect.y + 190))
             self.screen.blit(jogador_surf, jogador_rect)
 
             # Input box
