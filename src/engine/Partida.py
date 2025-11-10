@@ -54,7 +54,7 @@ class Partida:
 
         if valor_dados is None:
             self.proximo_jogador()
-            return {"jogador": jogador_da_vez, "dados": None, "acao": "preso"}
+            return {"jogador": jogador_da_vez, "dados": None, "acao": "falhou_em_sair_da_prisao"}
 
         self.dados_rolados_neste_turno = True
         is_double = valor_dados[0] == valor_dados[1]

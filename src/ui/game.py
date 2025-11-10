@@ -130,6 +130,10 @@ class Game:
         roll_dice_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-rodar-dados.png')).convert_alpha()
         self.roll_dice_button = Button(1090, 530, roll_dice_button_img, self.trigger_roll_dice)
 
+        # Sound
+        self.jail_fail_sound = pygame.mixer.Sound(os.path.join('sounds', 'jail_scape_fail.mp3'))
+        self.double_dice_sound = pygame.mixer.Sound(os.path.join('sounds', 'double_dice.wav'))
+
         # Board positions and animation
         self.casas_x_y = {
             0: (370, 595), 1: (426, 616), 2: (474, 616), 3: (522, 617), 4: (570, 617), 5: (618, 618), 6: (666, 618), 7: (714, 619), 8: (762, 619), 9: (810, 620), 
@@ -252,6 +256,8 @@ class Game:
         if acao == "moveu":
             self.valor_dado1, self.valor_dado2 = result["dados"][0], result["dados"][1]
             self.last_roll_was_double = result["is_double"]
+            if self.last_roll_was_double:
+                self.double_dice_sound.play()
             try:
                 jogador_idx = self.jogadores.index(result["jogador"])
                 self.animacao.iniciar(jogador_idx, result["path"], result["posicao_anterior"])
@@ -347,6 +353,10 @@ class Game:
                 self.game_state = "ANIMATING"
             except ValueError:
                 self.game_state = "AWAITING_ROLL"
+
+        elif acao == "falhou_em_sair_da_prisao":
+            self.jail_fail_sound.play()
+            self.game_state = "AWAITING_ROLL"
 
         elif acao in ["preso", "foi_preso_por_doubles", "turno_pronto_para_iniciar"]:
             self.game_state = "AWAITING_ROLL"
