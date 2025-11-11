@@ -23,7 +23,7 @@ class PayRentModal(Modal):
         # Buttons
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         ok_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-ok.png')).convert_alpha()
-        self.new_rent_image = pygame.image.load(os.path.join(assets_dir, 'alert-taxa-propriedade.png')).convert_alpha()
+        self.new_rent_image = pygame.image.load(os.path.join(assets_dir, 'pay_rent.png')).convert_alpha()
         CARD_SCALE = 1  # Escala da carta
 
         # Redimensiona a carta
@@ -37,22 +37,22 @@ class PayRentModal(Modal):
         # Centraliza na tela
         screen_w, screen_h = screen.get_size()
         self.carta_x = (screen_w - new_w) // 2
-        self.carta_y = ((screen_h - new_h) // 2) - 25
+        self.carta_y = (screen_h - new_h) // 2
 
 
         # Title (Property Name)
         self.title_surf = self.title_font.render(self.imovel.nome, True, (255, 255, 255))
-        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 50))
+        self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 80))
         
         # Owner
         owner_text = f"{self.imovel.dono.nome}"
         self.owner_surf = self.font.render(owner_text, True, (255, 255, 255))
-        self.owner_rect = self.owner_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 105))
+        self.owner_rect = self.owner_surf.get_rect(center=(self.modal_rect.centerx+25, self.modal_rect.y + 135))
 
         # Rent
         rent_text = f"{self.imovel.calcular_aluguel()}"
         self.rent_surf = self.price_font.render(rent_text, True, (255, 255, 255))
-        self.rent_rect = self.rent_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 150))
+        self.rent_rect = self.rent_surf.get_rect(center=(self.modal_rect.centerx+20, self.modal_rect.y + 182))
 
         # Buttons
         btn_y = self.modal_rect.y + 215
