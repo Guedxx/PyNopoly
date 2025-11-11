@@ -35,6 +35,11 @@ class Game:
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
         self.background = pygame.image.load(os.path.join(assets_dir, 'gamebg.png')).convert()
         
+        # Stop menu music and play game music
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(os.path.join(os.path.dirname(__file__), '..', '..', 'sounds', 'My Hello Kitty Cafe Soundtrack - City.mp3'))
+        pygame.mixer.music.play(-1)
+        
         # Load, scale, and center the board
         original_board_img = pygame.image.load(os.path.join(assets_dir, 'tab.png')).convert_alpha()
         original_board_size = original_board_img.get_size()
@@ -247,6 +252,8 @@ class Game:
             self.roll_dice_button.draw_to_surface(self.screen)
 
             pygame.display.flip()
+
+        pygame.mixer.music.stop()
 
     def handle_engine_result(self, result):
         if not result:

@@ -37,7 +37,7 @@ class PayRentModal(Modal):
         # Centraliza na tela
         screen_w, screen_h = screen.get_size()
         self.carta_x = (screen_w - new_w) // 2
-        self.carta_y = (screen_h - new_h) // 2
+        self.carta_y = ((screen_h - new_h) // 2) - 25
 
 
         # Title (Property Name)

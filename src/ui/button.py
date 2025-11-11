@@ -11,6 +11,7 @@ class Button:
         # Load sound
         sound_path = os.path.join('sounds', 'button.wav')
         self.click_sound = pygame.mixer.Sound(sound_path)
+        self.click_sound.set_volume(0.5)
 
         hover_sound_path = os.path.join('sounds', 'hover.wav')
         if os.path.exists(hover_sound_path):

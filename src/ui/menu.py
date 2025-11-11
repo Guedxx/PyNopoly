@@ -22,6 +22,10 @@ class Menu:
         self.menu_surface = pygame.image.load(os.path.join(assets_dir, "menu.png")).convert()
         self.menu_surface = pygame.transform.scale(self.menu_surface, (1280, 720))
         
+        # Load and play background music
+        pygame.mixer.music.load(os.path.join(os.path.dirname(__file__), '..', '..', 'sounds', 'My Hello Kitty Cafe Soundtrack - Cafe.mp3'))
+        pygame.mixer.music.play(-1) # -1 means loop indefinitely
+        
         start_button_image = pygame.image.load(os.path.join(assets_dir, "botao-jogar.png")).convert_alpha()
         credits_button_image = pygame.image.load(os.path.join(assets_dir, "botao-creditos.png")).convert_alpha()
         exit_button_image = pygame.image.load(os.path.join(assets_dir, "botao-sair.png")).convert_alpha()
@@ -77,6 +81,7 @@ class Menu:
                 game.run()
     
     def exit_game(self):
+        pygame.mixer.music.stop()
         pygame.quit()
         sys.exit()
 
