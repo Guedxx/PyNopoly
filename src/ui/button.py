@@ -12,6 +12,12 @@ class Button:
         sound_path = os.path.join('sounds', 'button.wav')
         self.click_sound = pygame.mixer.Sound(sound_path)
 
+        hover_sound_path = os.path.join('sounds', 'hover.wav')
+        if os.path.exists(hover_sound_path):
+            self.hover_sound = pygame.mixer.Sound(hover_sound_path)
+        else:
+            self.hover_sound = None
+
     def handle_event(self, event):
         """Handle mouse click events"""
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -24,7 +30,10 @@ class Button:
 
     def update_hover(self, mouse_pos):
         """Update hover state for visual feedback"""
+        was_hovered = self.is_hovered
         self.is_hovered = self.rect.collidepoint(mouse_pos)
+        if self.is_hovered and not was_hovered and self.hover_sound:
+            self.hover_sound.play()
 
     def draw_to_surface(self, surface):
         """Draw button to a pygame surface"""

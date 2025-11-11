@@ -4,12 +4,14 @@ import os
 from collections import defaultdict
 from .button import Button
 from ..engine.Imovel import Imovel
+from .property_management_modal import PropertyManagementModal
 
 class PlayerPropertiesScreen:
-    def __init__(self, screen, clock, jogador):
+    def __init__(self, screen, clock, jogador, partida):
         self.screen = screen
         self.clock = clock
         self.jogador = jogador
+        self.partida = partida
         self.running = True
 
         assets_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'assets')
@@ -28,9 +30,44 @@ class PlayerPropertiesScreen:
         # Back button
         back_button_img = pygame.image.load(os.path.join(assets_dir, 'botao-voltar-roxo.png')).convert_alpha()
         self.back_button = Button(50, self.screen.get_height() - back_button_img.get_height() - 50, back_button_img, self.close)
+        
+        self.properties_by_color = defaultdict(list)
+        for prop in self.jogador.propriedades:
+            if isinstance(prop, Imovel):
+                self.properties_by_color[prop.cor].append(prop)
+        
+        self.property_buttons = self._create_property_buttons()
+
+    def _create_property_buttons(self):
+        buttons = []
+        y_offset = 120
+        x_offset = 100
+        column_width = 500
+        for i, (color, props) in enumerate(self.properties_by_color.items()):
+            if y_offset > self.screen.get_height() - 200:
+                y_offset = 120
+                x_offset += column_width
+            
+            y_offset += 50
+
+            for prop in props:
+                color = (255, 0, 0) if prop.hipotecado else (255, 255, 255)
+                prop_surf = self.prop_font.render(prop.nome, True, color)
+                prop_rect = prop_surf.get_rect(topleft=(x_offset + 50, y_offset))
+                prop_button = Button(prop_rect.x, prop_rect.y, prop_surf, lambda p=prop: self.handle_property_click(p))
+                buttons.append(prop_button)
+                y_offset += 40
+            
+            y_offset += 20
+        return buttons
 
     def close(self):
         self.running = False
+
+    def handle_property_click(self, prop):
+        modal = PropertyManagementModal(self.screen, self.clock, prop, self.jogador, self.partida)
+        modal.show()
+        self.property_buttons = self._create_property_buttons()
 
     def run(self):
         while self.running:
@@ -45,6 +82,8 @@ class PlayerPropertiesScreen:
                     self.running = False
                 
                 self.back_button.handle_event(event)
+                for btn in self.property_buttons:
+                    btn.handle_event(event)
 
             self.screen.blit(self.background, (0, 0))
 
@@ -54,17 +93,12 @@ class PlayerPropertiesScreen:
             title_rect = title_surf.get_rect(center=(self.screen.get_width() // 2, 60))
             self.screen.blit(title_surf, title_rect)
 
-            # Group properties by color
-            properties_by_color = defaultdict(list)
-            for prop in self.jogador.propriedades:
-                if isinstance(prop, Imovel):
-                    properties_by_color[prop.cor].append(prop)
-
             # Display properties
             y_offset = 120
             x_offset = 100
             column_width = 500
-            for i, (color, props) in enumerate(properties_by_color.items()):
+            button_idx = 0
+            for i, (color, props) in enumerate(self.properties_by_color.items()):
                 if y_offset > self.screen.get_height() - 200:
                     y_offset = 120
                     x_offset += column_width
@@ -74,8 +108,11 @@ class PlayerPropertiesScreen:
                 y_offset += 50
 
                 for prop in props:
-                    prop_surf = self.prop_font.render(prop.nome, True, (255, 255, 255))
-                    self.screen.blit(prop_surf, (x_offset + 50, y_offset))
+                    if button_idx < len(self.property_buttons):
+                        button = self.property_buttons[button_idx]
+                        button.update_hover(mouse_pos)
+                        button.draw_to_surface(self.screen)
+                        button_idx += 1
 
                     # Draw houses
                     if prop.casas > 0:

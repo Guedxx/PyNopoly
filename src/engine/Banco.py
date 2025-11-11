@@ -62,6 +62,12 @@ class Banco:
         imovel.set_hipotecado(False)
         print(f"{jogador.peca} resgatou {imovel.nome} por ${custo_resgate}.")
 
+    def devolver_casa(self):
+        self._casas_disponiveis += 1
+
+    def devolver_hotel(self):
+        self._hoteis_disponiveis += 1
+
     def iniciar_leilao(self, imovel: Terreno, jogadores: List[Jogador]):
         """
         Inicia um leilão para uma propriedade não comprada. [cite: 1555]

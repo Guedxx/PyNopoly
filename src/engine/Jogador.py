@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .Tabuleiro.Tabuleiro import Tabuleiro
     from .Tabuleiro.Terreno import Terreno
     from .Tabuleiro.Cadeia import Cadeia
+    from .Banco import Banco
 
 
 class JogadorState(ABC):
@@ -153,6 +154,29 @@ class Jogador:
             print(f"{self.peca} construiu um hotel em {imovel.nome} por ${custo}.")
         else:
             print(f"{self.peca} construiu uma casa em {imovel.nome} por ${custo}. Total de casas: {imovel.casas}.")
+
+    def vender_casa(self, imovel: Imovel, banco: Banco):
+        """Vende uma casa de um imóvel."""
+        if imovel.casas > 0:
+            propriedades_da_cor = [p for p in self.propriedades if isinstance(p, Imovel) and p.cor == imovel.cor]
+            max_casas_no_grupo = max(p.casas for p in propriedades_da_cor)
+            if imovel.casas < max_casas_no_grupo:
+                print(f"Venda não é uniforme. Venda primeiro em outras propriedades do grupo {imovel.cor} que você possui.")
+                return
+
+            valor_venda = imovel.preco_casa // 2
+            self.receber_dinheiro(valor_venda)
+            
+            if imovel.casas == 5: # was a hotel
+                banco.devolver_hotel()
+            else:
+                banco.devolver_casa()
+            
+            imovel.casas -= 1
+
+            print(f"{self.peca} vendeu uma casa em {imovel.nome} por ${valor_venda}. Total de casas: {imovel.casas}.")
+        else:
+            print(f"Não há casas para vender em {imovel.nome}.")
 
     def tem_monopolio(self, cor: str, tabuleiro: Tabuleiro) -> bool:
         propriedades_da_cor = [p for p in self.propriedades if isinstance(p, Imovel) and p.cor == cor]
