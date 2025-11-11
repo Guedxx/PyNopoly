@@ -5,11 +5,11 @@ from .modal_interface import Modal
 from .button import Button
 
 class BuyPropertyModal(Modal):
-    def __init__(self, x, y, modal_image, screen, clock, imovel):
+    def __init__(self, x, y, modal_image, screen, clock, terreno):
         
         super().__init__(x, y, modal_image, screen, clock)
         
-        self.imovel = imovel
+        self.terreno = terreno
         self.decision = None # True for buy, False for not buy
 
 
@@ -42,11 +42,11 @@ class BuyPropertyModal(Modal):
 
         # Adjust positions for the larger, scaled modal
         # Title (Property Name)
-        self.title_surf = self.title_font.render(self.imovel.nome, True, (255, 255, 255))
+        self.title_surf = self.title_font.render(self.terreno.nome, True, (255, 255, 255))
         self.title_rect = self.title_surf.get_rect(center=(self.modal_rect.centerx, self.modal_rect.y + 55))
         
         # Price
-        price_text = f"{self.imovel.preco}"
+        price_text = f"{self.terreno.preco}"
         self.price_surf = self.price_font.render(price_text, True, (255, 255, 255))
         self.price_rect = self.price_surf.get_rect(center=(self.modal_rect.centerx + 17, self.modal_rect.y + 123))
 
