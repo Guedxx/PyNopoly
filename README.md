@@ -1,5 +1,7 @@
 # PyNopoly
 
+<img width="1265" height="691" alt="image" src="https://github.com/user-attachments/assets/3d65cd2a-1f08-480d-a395-2bbff7ca4c38" />
+
 PyNopoly is a Monopoly-like game developed in Python using the `pygame-ce` library.
 
 ## Core Technologies
