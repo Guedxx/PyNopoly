@@ -55,3 +55,9 @@ The project is organized as follows:
 ## License
 
 This project is licensed under the terms of the LICENSE file.
+
+
+## Class Diagram
+
+<img width="1164" height="940" alt="image" src="https://github.com/user-attachments/assets/2512ac46-f7d1-4701-8bed-50b3d1f6a2dc" />
+
